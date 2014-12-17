@@ -370,11 +370,13 @@ class TemplateVarParser{
 class TemplateBlock{
     private $parent;
     private $html;
+
     function  __construct($html,$parent=null)
     {
         $this->html = $html;
         $this->parent = $parent;
     }
+
     /**
      * @param $parent
      */
@@ -383,12 +385,14 @@ class TemplateBlock{
         $this->parent = $parent;
         return $this;
     }
+
     /**
      * @return TemplateBlock
      */
     public function getParent(){
         return $this->parent;
     }
+
     /**
      * @return mixed
      */
@@ -429,7 +433,7 @@ class Template {
         $this->system_Encoding = mb_internal_encoding();
         $this->default_modifiers = "htmlentities";
         $this->setDelimiter("{","}");
-        $this->auto_header = false;
+        $this->auto_header = true;
         $this->headers = array('Content-type' => 'text/html; charset='.$this->html_Encoding);
     }
 
