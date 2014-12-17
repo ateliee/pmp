@@ -1,0 +1,17 @@
+{
+    "name": "ateliee/pmp",
+    "type": "library",
+    "description": "php5 frameworks",
+    "keywords": [],
+    "homepage": "https://github.com/ateliee/pmp",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "ateliee",
+            "email": "ateliee@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.0.0"
+    }
+}

@@ -1,0 +1,164 @@
+# Copyright (C) 2014 ateliee.com
+# This file is distributed under the same license as the ateliee.com package.
+msgid ""
+msgstr ""
+"Project-Id-Version: PHP Error\n"
+"Report-Msgid-Bugs-To: http://ateliee.com\n"
+"POT-Creation-Date: 2014-08-03 02:29+0900\n"
+"PO-Revision-Date: 2014-08-03 02:29+0900\n"
+"Last-Translator: ateliee <info@ateliee.com>\n"
+"Language-Team: ateliee <info@ateliee.com>\n"
+"Language: ja_JP\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.6.6\n"
+"X-Poedit-KeywordsList: __;_e;__gt\n"
+"X-Poedit-Basepath: ../\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-SearchPath-0: .\n"
+
+#: errors.php:60
+msgid "array"
+msgstr "配列"
+
+#: errors.php:61
+msgid "string"
+msgstr "文字列"
+
+#: errors.php:62
+msgid "object"
+msgstr "オブジェクト"
+
+#: errors.php:65
+#, php-format
+msgid "Missing argument %d for %s, called in"
+msgstr "%2$sの呼び出しには、%1$d個の引数を指定してください"
+
+#: errors.php:66
+#, php-format
+msgid "Use of undefined constant %s - assumed '%s'"
+msgstr "タイプミスかもしれません '%2$s' %1$s"
+
+#: errors.php:67
+#, php-format
+msgid "%s to %s conversion"
+msgstr "%1$sを%2$sに変換しています"
+
+#: errors.php:68
+#, php-format
+msgid "Illegal string offset '%s'"
+msgstr "配列要素の存在しないキーへのアクセス '%1$s'"
+
+#: errors.php:69
+msgid "Call to undefined method"
+msgstr "クラスメソッドがありません"
+
+#: errors.php:70
+#, php-format
+msgid "Non-static method %s should not be called statically"
+msgstr "非staticメソッドをstaticに呼び出しています %1$s"
+
+#: errors.php:71
+#, php-format
+msgid "Call to protected method %s from context '%s'"
+msgstr "'%2$s'から %1$s のprotectedメソッドにアクセスできません"
+
+#: errors.php:72
+msgid "Cannot access private property"
+msgstr "privateメソッドへはアクセスできません"
+
+#: errors.php:73
+#, php-format
+msgid "Undefined variable: %s"
+msgstr "%sという変数は宣言されていません"
+
+#: errors.php:74
+#, php-format
+msgid "Undefined index: %s"
+msgstr "%sは配列にないインデックスです"
+
+#: errors.php:75
+msgid "Illegal offset type in isset or empty"
+msgstr "配列またはオブジェクトをキーとして使用することはできません"
+
+#: errors.php:76
+#, php-format
+msgid "%s expects parameter %s to be %s, %s given"
+msgstr "関数%1$sの%2$s個目に%4$sが渡されています。%3$sを渡してください。"
+
+#: errors.php:77
+#, php-format
+msgid "Call to private method %s from context '%s'"
+msgstr "'%2$s'から %1$s のprotectedメソッドにアクセスできません"
+
+#: errors.php:78
+#, php-format
+msgid "Call to a member function %s on a non-object"
+msgstr "%1$sはオブジェクトに関連付けられていないメンバー関数です"
+
+#: errors.php:79
+#, php-format
+msgid "Invalid argument supplied for %s"
+msgstr "配列でないものを%1$sしている可能性があります"
+
+#: errors.php:80
+msgid "Only variables should be passed by reference"
+msgstr "変数のみ参照渡しが可能です"
+
+#: errors.php:100
+msgid "Fatal run-time errors"
+msgstr "重大なエラー"
+
+#: errors.php:101
+msgid "Run-time warnings (non-fatal errors)"
+msgstr "実行時の警告 (致命的なエラーではない)"
+
+#: errors.php:102
+msgid "Compile-time parse errors"
+msgstr "コンパイル時のパースエラー"
+
+#: errors.php:103 errors.php:113
+msgid "Run-time notices"
+msgstr "実行時の警告"
+
+#: errors.php:104
+msgid "Fatal errors that occur during PHP's initial startup"
+msgstr "PHPの初期始動時点での致命的なエラー"
+
+#: errors.php:105
+msgid "Warnings (non-fatal errors)"
+msgstr "（致命的ではない）警告"
+
+#: errors.php:106
+msgid "Fatal compile-time errors"
+msgstr "コンパイル時の致命的なエラー"
+
+#: errors.php:107
+msgid "Compile-time warnings (non-fatal errors)"
+msgstr "コンパイル時の警告（致命的ではない）"
+
+#: errors.php:108
+msgid "User-generated error message"
+msgstr "ユーザーによって発行されるエラーメッセージ"
+
+#: errors.php:109 errors.php:114
+msgid "User-generated warning message"
+msgstr "ユーザーによって発行される警告メッセージ"
+
+#: errors.php:110
+msgid "User-generated notice message"
+msgstr "ユーザーによって発行される注意メッセージ"
+
+#: errors.php:111
+msgid ""
+"Enable to have PHP suggest changes to your code which will ensure the best "
+"interoperability and forward compatibility of your code"
+msgstr "PHP互換性エラー"
+
+#: errors.php:112
+msgid "Catchable fatal error"
+msgstr "キャッチできる致命的なエラー"
+
+#~ msgid "Non-static method"
+#~ msgstr "staticなメソッドではありません"
