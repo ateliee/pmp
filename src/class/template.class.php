@@ -365,6 +365,40 @@ class TemplateVarParser{
 }
 
 /**
+ * Class TemplateBlock
+ */
+class TemplateBlock{
+    private $parent;
+    private $html;
+    function  __construct($html,$parent=null)
+    {
+        $this->html = $html;
+        $this->parent = $parent;
+    }
+    /**
+     * @param $parent
+     */
+    public function setParent($parent)
+    {
+        $this->parent = $parent;
+        return $this;
+    }
+    /**
+     * @return TemplateBlock
+     */
+    public function getParent(){
+        return $this->parent;
+    }
+    /**
+     * @return mixed
+     */
+    public function __toString()
+    {
+        return $this->html;
+    }
+}
+
+/**
  * Class Template
  */
 class Template {
