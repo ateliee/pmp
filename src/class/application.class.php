@@ -6,6 +6,7 @@ class Application{
     static private $root_dir;
     static private $base_url;
     static private $web_url;
+    static private $source_dir;
     static private $auth = array();
     static private $debug_mode = false;
     /**
@@ -54,6 +55,14 @@ class Application{
      */
     static function setBaseUrl($path){
         return self::$base_url = $path;
+    }
+
+    /**
+     * @param $path
+     * @return mixed
+     */
+    static function setSourceDir($path){
+        return self::$source_dir = $path;
     }
 
     /**
@@ -173,7 +182,7 @@ class Application{
         }
         $benchmark->setMark("routing");
         try{
-            $path = dirname(__FILE__)."/../../src/".$project;
+            $path = self::$source_dir."/".$project;
             $filename = $path."/conf";
             dir_include_all($filename);
             $filename = $path."/class";
