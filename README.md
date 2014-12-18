@@ -1,4 +1,7 @@
-# phpフレームワークス
+# 高機能php frameworks
+
+![image](/documents/images/icon.png)
+
 pmpはsymfonyを模した超軽量フレームワークスです。
 
 symfonyほどの高度な機能はありませんが、その分超軽量で快適に動作致します。
@@ -24,6 +27,7 @@ symfonyほどの高度な機能はありませんが、その分超軽量で快�
 ```
 require 'vendor/autoload.php';
 ```
+
 
 ## ファイル構成
 ```
