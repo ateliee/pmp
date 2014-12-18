@@ -217,3 +217,17 @@ class Application{
     }
 
 }
+
+{
+    $rootdir = dirname(__FILE__).'/../../../../../';
+    $hostname = isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : '';
+    if(isset($_SERVER['SERVER_PORT']) && !in_array($_SERVER['SERVER_PORT'],array(80,443))){
+        $hostname .= ':'.$_SERVER['SERVER_PORT'];
+    }
+    $documentroot = preg_replace('/^'.preg_quote($_SERVER['DOCUMENT_ROOT'],'/').'/','',realpath($rootdir));
+
+    Application::setRootDir($rootdir);
+    Application::setBaseUrl($documentroot);
+    Application::setWebUrl($documentroot.'/web');
+
+}
