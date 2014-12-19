@@ -1,5 +1,15 @@
 <?php
 
+/**
+ * Class TemplateException
+ */
+class DatabaseException extends Exception
+{
+}
+
+/**
+ * Class DatabaseReferencesField
+ */
 class DatabaseReferencesField{
     private $name;
     private $table_name;
@@ -85,17 +95,17 @@ class DatabaseField{
                 if(is_array($v)){
 
                 }else{
-                    throw new PMPException('Database Field references not value ');
+                    throw new DatabaseException('Database Field references not value ');
                 }
             }else if(in_array($k,array('privileges'))){
             }else{
-                throw new PMPException('Database Field not support '.$k);
+                throw new DatabaseException('Database Field not support '.$k);
             }
         }
         if($this->name == ''){
-            throw new PMPException('Database Field not select name '.implode(',',$field));
+            throw new DatabaseException('Database Field not select name '.implode(',',$field));
         }else if($this->type == ''){
-            throw new PMPException('Database Field not select type'.implode(',',$field));
+            throw new DatabaseException('Database Field not select type'.implode(',',$field));
         }
     }
 
@@ -235,10 +245,6 @@ class DatabaseField{
         }
         return $default;
     }
-}
-
-class DatabaseException extends Exception
-{
 }
 
 /**
@@ -1099,7 +1105,7 @@ class Database{
      */
     private function makeColumnsQuery(DatabaseField $field){
         if(!($field instanceof DatabaseField)){
-            throw new PMPException("CreateTable Fields Error.");
+            $this->throwError("CreateTable Fields Error.");
         }
         $attr = array();
         if($field->getAttribute() == "unsigned"){
@@ -1290,7 +1296,7 @@ class SQL_Query{
             }
             $this->find = implode(",",$find);
         }else{
-            throw new PMPException(__FUNCTION__."() error argment.");
+            throw new DatabaseException(__FUNCTION__."() error argment.");
         }
         return $this;
     }
@@ -1440,7 +1446,7 @@ class SQL_Query{
             }
             return str_replace($replaces,$args,$sql);
         }else{
-            throw new PMPException(__FUNCTION__."() error argment.");
+            throw new DatabaseException(__FUNCTION__."() error argment.");
         }
     }
 
