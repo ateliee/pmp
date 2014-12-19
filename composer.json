@@ -11,11 +11,19 @@
             "email": "ateliee@gmail.com"
         }
     ],
+    "repositories": [
+        {
+            "type": "pear",
+            "url": "http://pear.php.net/"
+        }
+    ],
     "require": {
-        "php": ">=5.0.0"
+        "php": ">=5.0.0",
+        "pear-pear.php.net/PEAR" : "*",
+        "pear-pear.php.net/Mail" : "*"
     },
     "autoload": {
-        "psr-0": { "pmp": "src" },
+        "psr-0": { "pmp": "class" },
         "files": ["include.php"]
     }
 }
