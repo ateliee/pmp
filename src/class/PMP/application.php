@@ -41,7 +41,7 @@ class Application{
      * @return mixed
      */
     static function setRootDir($path){
-        return self::$root_dir = $path;
+        return self::$root_dir = realpath($path);
     }
 
     /**
