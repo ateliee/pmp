@@ -1,6 +1,4 @@
 <?php
-use PMP;
-
 /**
  *
  */
@@ -52,7 +50,7 @@ function load_user_application($path){
         // include model
         dir_include_all($libs_path."/model",function($file){
             $model_name = ucfirst(pathinfo($file,PATHINFO_FILENAME));
-            Database::addManagementModel($model_name);
+            \PMP\Database::addManagementModel($model_name);
         });
         dir_include_all($libs_path."/include");
         dir_include_all($libs_path."/conf");
@@ -83,10 +81,10 @@ function load_application_model($path){
 function __pmp(){
     $arg_num = func_num_args();
     if($arg_num == 1){
-        return Localize::dgetText('pmp',func_get_arg(0),Localize::getEncoding());
+        return \PMP\Localize::dgetText('pmp',func_get_arg(0),\PMP\Localize::getEncoding());
     }else if($arg_num > 1){
         $args = array_merge(
-            array(Localize::dgetText('pmp',func_get_arg(0),Localize::getEncoding())),
+            array(\PMP\Localize::dgetText('pmp',func_get_arg(0),\PMP\Localize::getEncoding())),
             array_slice(func_get_args(),1));
         return call_user_func_array("sprintf",$args);
     }
