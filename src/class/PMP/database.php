@@ -785,7 +785,7 @@ class Database{
                     if($value["Key"] == "PRI"){
                         $value["Key"] = "primary";
                     }else if($value["Key"] == "UNI"){
-                            $value["Key"] = "unique";
+                        $value["Key"] = "unique";
                     }
                 }
                 $list[$key] = new DatabaseField($value);
@@ -1305,11 +1305,26 @@ class SQL_Query{
     }
 
     /**
+     * @param $args
+     * @return mixed
+     * @throws DatabaseException
+     */
+    private function convertArgsSQL($args)
+    {
+        if(count($args) > 1){
+            return call_user_func_array("sprintf", $args);
+        }else if(count($args) > 0 && is_string($args[0])){
+            return $args[0];
+        }else{
+            throw new DatabaseException('error args parse');
+        }
+    }
+
+    /**
      * @return $this
      */
     public function where(){
-        $args = func_get_args();
-        $this->where = call_user_func_array("sprintf", $args);
+        $this->where = $this->convertArgsSQL(func_get_args());
         return $this;
     }
 
@@ -1317,8 +1332,7 @@ class SQL_Query{
      * @return $this
      */
     public function orWhere(){
-        $args = func_get_args();
-        $where = call_user_func_array("sprintf", $args);
+        $where = $this->convertArgsSQL(func_get_args());
         $this->where .= ($this->where != "" ? " OR " : "").$where;
         return $this;
     }
@@ -1327,8 +1341,7 @@ class SQL_Query{
      * @return $this
      */
     public function andWhere(){
-        $args = func_get_args();
-        $where = call_user_func_array("sprintf", $args);
+        $where = $this->convertArgsSQL(func_get_args());
         $this->where .= ($this->where != "" ? " AND " : "").$where;
         return $this;
     }
@@ -1337,8 +1350,7 @@ class SQL_Query{
      * @return $this
      */
     public function order(){
-        $args = func_get_args();
-        $order = call_user_func_array("sprintf", $args);
+        $order = $this->convertArgsSQL(func_get_args());
         $this->order = $order;
         return $this;
     }
@@ -1347,8 +1359,7 @@ class SQL_Query{
      * @return $this
      */
     public function group(){
-        $args = func_get_args();
-        $group = call_user_func_array("sprintf", $args);
+        $group = $this->convertArgsSQL(func_get_args());
         $this->group = $group;
         return $this;
     }
