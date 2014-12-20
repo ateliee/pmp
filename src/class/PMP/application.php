@@ -222,7 +222,7 @@ class Application{
 }
 
 {
-    $rootdir = dirname(__FILE__).'/../../../../../';
+    $rootdir = dirname(__FILE__).'/../../../../../..';
     $hostname = isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : '';
     if(isset($_SERVER['SERVER_PORT']) && !in_array($_SERVER['SERVER_PORT'],array(80,443))){
         $hostname .= ':'.$_SERVER['SERVER_PORT'];
