@@ -214,7 +214,7 @@ class Application{
             $benchmark->stop();
             //$benchmark->display(false);
 
-        }catch (Exception $e){
+        }catch (\Exception $e){
             throw new PMPException($e);
         }
     }

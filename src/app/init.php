@@ -1,4 +1,5 @@
 <?php
+use PMP;
 
 /**
  *
@@ -6,7 +7,7 @@
 function autoload_class(){
     if(function_exists("spl_autoload_register")){
         function autoloader($class) {
-            $dir = dirname(__FILE__).'/../class/';
+            $dir = dirname(__FILE__).'/../class/PMP';
             $filename = $dir.($class).'.php';
             $filename2 = $dir.strtolower($class).'.php';
             if(file_exists($filename)){
@@ -19,7 +20,7 @@ function autoload_class(){
         }
         spl_autoload_register('autoloader');
     }else{
-        dir_include_all(dirname(__FILE__).'/../class');
+        dir_include_all(dirname(__FILE__).'/../class/PMP');
     }
 }
 /**
@@ -82,10 +83,10 @@ function load_application_model($path){
 function __pmp(){
     $arg_num = func_num_args();
     if($arg_num == 1){
-        return Localize::dgetText(PMP_TEXTDOMAIN,func_get_arg(0),Localize::getEncoding());
+        return Localize::dgetText('pmp',func_get_arg(0),Localize::getEncoding());
     }else if($arg_num > 1){
         $args = array_merge(
-            array(Localize::dgetText(PMP_TEXTDOMAIN,func_get_arg(0),Localize::getEncoding())),
+            array(Localize::dgetText('pmp',func_get_arg(0),Localize::getEncoding())),
             array_slice(func_get_args(),1));
         return call_user_func_array("sprintf",$args);
     }

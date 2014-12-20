@@ -101,7 +101,7 @@ class AuthManager{
     private $find_user;
 
     function __construct(){
-        $this->setType(AUTHTYPE_BASIC);
+        $this->setType(self::AUTHTYPE_BASIC);
         $this->find_user = null;
     }
 
