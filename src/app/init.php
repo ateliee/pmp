@@ -1,4 +1,5 @@
 <?php
+use PMP\htmlElement;
 use PMP\Localize;
 
 require_once(dirname(__FILE__).'/../class/PMP/Localize.php');
