@@ -899,7 +899,7 @@ class Database{
             $sql_vals = array();
             $param = array("TABLE" => $this->escapeColumn($table_name));
             foreach($fields as $k => $v){
-                $f = $columns[$k]->getDBField();
+                $f = $columns[$k];
                 if(!$v && ($f->getAi() || $f->getDefault())){
                     continue;
                 }
