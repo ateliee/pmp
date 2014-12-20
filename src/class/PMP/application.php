@@ -195,7 +195,7 @@ class Application{
             if(file_exists($filename)){
                 include_once($filename);
             }else{
-                $path = dirname(__FILE__)."/../component";
+                $path = dirname(__FILE__)."/../../component";
                 $filename = $path."/controller/".$class.".php";
                 if(file_exists($filename)){
                     include_once($filename);

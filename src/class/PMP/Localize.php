@@ -1,25 +1,6 @@
 <?php
 namespace PMP;
 
-if(!function_exists("_e")){
-    function _e($text){
-        echo Localize::getText($text,Localize::getEncoding());
-    }
-}
-if(!function_exists("__")){
-    function __(){
-        $arg_num = func_num_args();
-        if($arg_num == 1){
-            return Localize::getText(func_get_arg(0),Localize::getEncoding());
-        }else if($arg_num > 1){
-            $args = array_merge(
-                array(Localize::getText(func_get_arg(0),Localize::getEncoding())),
-                array_slice(func_get_args(),1));
-            return call_user_func_array("sprintf",$args);
-        }
-    }
-}
-
 /**
  * Class Localize
  * @package PMP

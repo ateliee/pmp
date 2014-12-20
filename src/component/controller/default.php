@@ -1,4 +1,6 @@
 <?php
+use PMP\Controller;
+use PMP\Server;
 
 /**
  * Class defaultController

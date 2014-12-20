@@ -1,8 +1,6 @@
 <?php
 namespace PMP;
 
-include_once(dirname(__FILE__) . "/auth.php");
-
 /**
  * Class AuthBasic
  */
