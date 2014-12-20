@@ -1,5 +1,5 @@
 <?php
-include_once(dirname(__FILE__) . '/json.class.php');
+include_once(dirname(__FILE__) . '/json.php');
 /**
  * Class Controller
  */

@@ -8,7 +8,8 @@
     "authors": [
         {
             "name": "ateliee",
-            "email": "ateliee@gmail.com"
+            "email": "info@ateliee.com",
+            "homepage": "http://ateliee.com"
         }
     ],
     "repositories": [
@@ -18,12 +19,14 @@
         }
     ],
     "require": {
-        "php": ">=5.0.0",
+        "php": ">=5.0.0"
+    },
+    "require-dev": {
         "pear-pear.php.net/PEAR" : "*",
         "pear-pear.php.net/Mail" : "*"
     },
     "autoload": {
-        "psr-0": { "pmp": "class" },
+        "psr-0": { "pmp": "src" },
         "files": ["include.php"]
     }
 }

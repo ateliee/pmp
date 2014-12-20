@@ -2,9 +2,16 @@
 /**
  * PMP Application
  */
-include_once(dirname(__FILE__) . '/src/errors/errors.php');
-include_once(dirname(__FILE__) . '/src/app/setup.php');
 // config file put loading
-autoload_class();
 dir_include_all(dirname(__FILE__).'/src/core');
-include_once(dirname(__FILE__) . '/src/app/application.php');
+autoload_class();
+require_once(dirname(__FILE__).'/app/init.php');
+
+// set locale
+Localize::setLocale("ja","JP","UTF-8");
+Localize::setTimeZone('Asia/Tokyo');
+// language file
+Localize::textDomain('application');
+Localize::bindTextDomain('application',dirname(__FILE__).'/languages');
+
+//PHPLangError::init();

@@ -23,6 +23,17 @@ symfonyほどの高度な機能はありませんが、その分超軽量で快�
     }
 ```
 
+一部の機能は他のライブラリに依存しています。
+
+インストールされていない場合は下記にてインストールしてください。
+```
+    "require": {
+        ...
+        "pear-pear.php.net/PEAR" : "*",
+        "pear-pear.php.net/Mail" : "*"
+    }
+```
+
 ### autoload
 ```
 require 'vendor/autoload.php';
