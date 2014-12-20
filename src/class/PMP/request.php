@@ -17,6 +17,15 @@ class RequestVars{
     }
 
     /**
+     * @param $key
+     * @param $value
+     * @return $this
+     */
+    public function set($key,$value){
+        $this->vars[$key] = $value;
+        return $this;
+    }
+    /**
      * @param $arr
      * @return bool
      * @throws PMPException
@@ -24,7 +33,7 @@ class RequestVars{
     public function setVars($arr){
         if(is_array($arr)){
             foreach($arr as $k => $v){
-                $this->vars[$k] = $v;
+                $this->set($k,$v);
             }
             return true;
         }
