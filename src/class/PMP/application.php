@@ -143,7 +143,7 @@ class Application{
      * @return string
      */
     static public function getRoutingUrl(){
-        return self::getBaseUrl(call_user_func_array(array("Routing","generateUrl"),func_get_args()));
+        return self::getBaseUrl(call_user_func_array(array(__NAMESPACE__ ."\Routing","generateUrl"),func_get_args()));
     }
 
     /**
