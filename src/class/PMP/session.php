@@ -1,7 +1,9 @@
 <?php
+namespace PMP;
 
 /**
  * Class Session
+ * @package PMP
  */
 class Session
 {

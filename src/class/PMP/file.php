@@ -1,7 +1,9 @@
 <?php
+namespace PMP;
 
 /**
  * Class File
+ * @package PMP
  */
 class File{
     // MIME Type

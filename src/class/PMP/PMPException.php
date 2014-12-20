@@ -1,14 +1,17 @@
 <?php
+namespace PMP;
+
 /**
-* PMP exception class
-*/
-class PMPException extends Exception
+ * Class PMPException
+ * @package PMP
+ */
+class PMPException extends \Exception
 {
     public static $escape = false;
 
     public $exception;
 
-    function  __construct($message, $code = 0, Exception $previous = null) {
+    function  __construct($message, $code = 0, \Exception $previous = null) {
         //print $this->getMessage();
         //print $this->getFile();
         parent::__construct($message, $code, $previous);

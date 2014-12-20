@@ -1,7 +1,9 @@
 <?php
+namespace PMP;
 
 /**
  * Class Debug
+ * @package PMP
  */
 class Debug{
     /**

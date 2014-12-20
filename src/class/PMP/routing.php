@@ -1,6 +1,9 @@
 <?php
+namespace PMP;
+
 /**
  * Class Routing
+ * @package PMP
  */
 class Routing{
     static private $roules = array();

@@ -1,7 +1,9 @@
 <?php
+namespace PMP;
 
 /**
  * Class Pager
+ * @package PMP
  */
 class Pager {
     private $current;

@@ -1,7 +1,9 @@
 <?php
+namespace PMP;
 
 /**
  * Class Response
+ * @package PMP
  */
 class Response {
     private $contents;

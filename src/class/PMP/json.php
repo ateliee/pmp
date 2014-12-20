@@ -1,9 +1,15 @@
 <?php
+namespace PMP;
+
 if(!defined('JSON_PRETTY_PRINT')){
     define('JSON_PRETTY_PRINT',128);
     define('PMP_JSON_PRETTY_PRINT',true);
 }
 
+/**
+ * Class jsonObj
+ * @package PMP
+ */
 class jsonObj{
     private $data;
     private $option = 0;

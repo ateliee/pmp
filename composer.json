@@ -26,7 +26,7 @@
         "pear-pear.php.net/Mail" : "*"
     },
     "autoload": {
-        "psr-0": { "pmp": "src" },
+        "psr-0": { "PMP": "src/class" },
         "files": ["include.php"]
     }
 }

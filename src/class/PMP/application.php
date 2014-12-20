@@ -1,5 +1,7 @@
 <?php
-require_once(dirname(__FILE__).'/server.php');
+namespace PMP;
+
+require_once(dirname(__FILE__) . '/server.php');
 /**
  * Class Application
  */

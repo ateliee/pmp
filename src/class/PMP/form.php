@@ -1,7 +1,9 @@
 <?php
+namespace PMP;
 
 /**
  * Class htmlElement
+ * @package PMP
  */
 class htmlElement{
     protected $tag_name;

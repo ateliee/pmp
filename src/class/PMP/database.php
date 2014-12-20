@@ -1,14 +1,17 @@
 <?php
+namespace PMP;
 
 /**
- * Class TemplateException
+ * Class DatabaseException
+ * @package PMP
  */
-class DatabaseException extends Exception
+class DatabaseException extends \Exception
 {
 }
 
 /**
  * Class DatabaseReferencesField
+ * @package PMP
  */
 class DatabaseReferencesField{
     private $name;

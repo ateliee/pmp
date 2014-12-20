@@ -1,5 +1,10 @@
 <?php
+namespace PMP;
 
+/**
+ * Class RequestVars
+ * @package PMP
+ */
 class RequestVars{
     private $vars;
 

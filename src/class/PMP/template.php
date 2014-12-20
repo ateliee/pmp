@@ -1,4 +1,6 @@
 <?php
+namespace PMP;
+
 /**
  * Class Template v1
  * support mysql
@@ -6,11 +8,17 @@
 # TODO : PHP template convert
 # TODO : cache create
 
-class TemplateException extends Exception
+/**
+ * Class TemplateException
+ * @package PMP
+ */
+class TemplateException extends \Exception
 {
 }
+
 /**
  * Class TemplateVarNode
+ * @package PMP
  */
 class TemplateVarNode{
     static $TYPE_FUNCTION = 'function';

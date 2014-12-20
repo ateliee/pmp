@@ -1,7 +1,11 @@
 <?php
+namespace PMP;
+
 include_once(dirname(__FILE__) . '/json.php');
+
 /**
  * Class Controller
+ * @package PMP
  */
 class Controller{
     protected $path;

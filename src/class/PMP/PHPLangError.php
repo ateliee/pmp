@@ -1,4 +1,5 @@
 <?php
+namespace PMP;
 
 /**
  * @param $text
@@ -7,8 +8,10 @@
 function __gt($text){
     return array($text,__($text));
 }
+
 /**
  * Class PHPLangError
+ * @package PMP
  */
 class PHPLangError{
     static $domain = "PHPLangError";

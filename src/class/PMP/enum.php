@@ -1,7 +1,9 @@
 <?php
+namespace PMP;
 
 /**
  * Class Enum
+ * @package PMP
  */
 abstract class Enum
 {

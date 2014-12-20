@@ -1,7 +1,9 @@
 <?php
+namespace PMP;
 
 /**
  * Class Server
+ * @package PMP
  */
 class Server{
     static private $default_options = array();

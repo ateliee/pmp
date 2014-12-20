@@ -1,7 +1,9 @@
 <?php
+namespace PMP;
 
 /**
  * Class ModelField
+ * @package PMP
  */
 class ModelField{
     protected $dbfield;

@@ -1,4 +1,5 @@
 <?php
+namespace PMP;
 
 if(!function_exists("_e")){
     function _e($text){
@@ -18,8 +19,10 @@ if(!function_exists("__")){
         }
     }
 }
+
 /**
  * Class Localize
+ * @package PMP
  */
 class Localize{
     private static $language;

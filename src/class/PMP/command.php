@@ -1,5 +1,10 @@
 <?php
+namespace PMP;
 
+/**
+ * Class CommandShell
+ * @package PMP
+ */
 class CommandShell{
     private $message;
     private $callback;
