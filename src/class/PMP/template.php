@@ -1,10 +1,10 @@
 <?php
 namespace PMP;
 
-/**
- * Class Template v1
- * support mysql
- */
+    /**
+     * Class Template v1
+     * support mysql
+     */
 # TODO : PHP template convert
 # TODO : cache create
 
@@ -142,10 +142,10 @@ class TemplateVarParser{
                 $tmp = '';
             }else if(in_array($s,array("[","]"))){
                 if($tmp != ""){
-                    $tmp .= $s;
-                }else{
-                    $params[] = $s;
+                    $params[] = $tmp;
+                    $tmp = "";
                 }
+                $params[] = $s;
             }else if(in_array($s,array("(",")",",",":"))){
                 if($tmp != ""){
                     $params[] = $tmp;
@@ -230,7 +230,7 @@ class TemplateVarParser{
                 }
             }
             if(!$success){
-                $this->error('Parse Error '.$this->original_str);
+                $this->error('Parse Error VarList '.$this->original_str);
             }
             return $o;
             // array
@@ -270,7 +270,7 @@ class TemplateVarParser{
                                 break;
                             }
                         }else{
-                            $this->error('Parse Error '.$this->original_str);
+                            $this->error('Parse Error Array '.$this->original_str);
                         }
                     }else{
                         $o->addParam($p1);
@@ -278,7 +278,7 @@ class TemplateVarParser{
                 }
             }
             if(!$success){
-                $this->error('Parse Error '.$this->original_str);
+                $this->error('Parse Error Array '.$this->original_str);
             }
             return $o;
         }else if(in_array($s,array('===','!=','==','<=','>=','<','>','-','+','*','/','%','!','||','&&'))){
@@ -782,7 +782,7 @@ class Template {
                             $p2 = $this->convertTemplateVar($node->getParam($param_num+1),false);
                             $result = $this->convertToCalculation($result,$c->getName(),$p2);
                         }else{
-                            throw new TemplateException();
+                            throw new TemplateException('not support var');
                         }
                     }
                 }
@@ -797,11 +797,11 @@ class Template {
                         $p2 = $this->convertTemplateVar($node,false);
                         $result = $this->convertToCalculation(0,$c->getName(),$p2);
                     }else{
-                        throw new TemplateException();
+                        throw new TemplateException('not support calculation');
                     }
                 }
             }else{
-                throw new TemplateException();
+                throw new TemplateException('not found Parser');
             }
             if(!$loop){
                 break;
