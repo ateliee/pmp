@@ -3,7 +3,7 @@
  * PMP Application
  */
 // config file put loading
-require_once(dirname(__FILE__).'/app/init.php');
+require_once(dirname(__FILE__).'/src/app/init.php');
 dir_include_all(dirname(__FILE__).'/src/core');
 autoload_class();
 
@@ -20,7 +20,7 @@ Localize::bindTextDomain('application',dirname(__FILE__).'/languages');
 /**
  * init framework file
  */
-require_once(dirname(__FILE__) . '/../class/template.php');
+require_once(dirname(__FILE__) . '/src/class/template.php');
 
 Template::filter("html_element",function(htmlElement $element,$param=array()){
     foreach($param as $key => $val){
