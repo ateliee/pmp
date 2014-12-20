@@ -14,7 +14,7 @@ function autoload_class(){
             } else if(file_exists($filename2)){
                 include_once( $filename2 );
             }else{
-                throw new PMPException("Error Class Name '".$class."'");
+                throw new Exception("Error Class Name '".$class."'");
             }
         }
         spl_autoload_register('autoloader');
