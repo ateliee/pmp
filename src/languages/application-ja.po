@@ -21,56 +21,56 @@ msgstr ""
 "X-Poedit-SearchPath-2: core\n"
 "X-Poedit-SearchPath-3: extend\n"
 
-#: class/authBasic.class.php:14
+#: class/authBasic.php:14
 msgid "failed auth."
 msgstr "認証エラー"
 
-#: class/form.class.php:354
+#: class/form.php:354
 #, php-format
 msgid "input required from %1$s."
 msgstr "%sは必須項目です"
 
-#: class/form.class.php:357
+#: class/form.php:357
 #, php-format
 msgid "error format email from %1$s."
 msgstr "%1$sはメールアドレスの形式ではありません"
 
-#: class/form.class.php:360
+#: class/form.php:360
 #, php-format
 msgid "error format url from %1$s."
 msgstr "%1$sはURLの形式ではありません"
 
-#: class/form.class.php:363
+#: class/form.php:363
 #, php-format
 msgid "error format date from %1$s."
 msgstr "%1$sは日付の形式ではありません"
 
-#: class/form.class.php:366
+#: class/form.php:366
 #, php-format
 msgid "error format datetime from %1$s."
 msgstr "%1$sは時間の形式ではありません"
 
-#: class/form.class.php:369
+#: class/form.php:369
 #, php-format
 msgid "error format time from %1$s."
 msgstr "%1$sは時刻の形式ではありません"
 
-#: class/form.class.php:372
+#: class/form.php:372
 #, php-format
 msgid "error format password from %1$s."
 msgstr "%1$sは半角英数字で入力してください"
 
-#: class/form.class.php:375
+#: class/form.php:375
 #, php-format
 msgid "error format from %1$s."
 msgstr "%1$sの入力形式が正しくありません"
 
-#: class/form.class.php:378
+#: class/form.php:378
 #, php-format
 msgid "error choices select from %1$s."
 msgstr "%1$sは選択できません"
 
-#: class/model.class.php:45
+#: class/model.php:45
 msgid "primary key"
 msgstr "主キー"
 
