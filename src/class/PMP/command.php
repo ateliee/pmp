@@ -104,6 +104,15 @@ class CommandAction{
     }
 
     /**
+     * @param $key
+     * @return mixed
+     */
+    public function getShell($key)
+    {
+        return $this->shells[$key];
+    }
+
+    /**
      * @param $func
      * @return $this
      */
