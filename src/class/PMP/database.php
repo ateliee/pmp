@@ -29,8 +29,10 @@ class DatabaseReferencesColumn{
         $this->delete = strtoupper($delete);
     }
 }
+
 /**
  * Class DatabaseColumn
+ * @package PMP
  */
 class DatabaseColumn{
     private $name;
@@ -55,14 +57,14 @@ class DatabaseColumn{
                 $this->name = $v;
             }else if($k == "type"){
                 if(preg_match("/^(.+)\(([0-9]+)\) (.+)$/",$v,$matchs)){
-                    $this->type = $matchs[1];
+                    $this->setType($matchs[1]);
                     $this->length = $matchs[2];
                     $this->attribute = $matchs[3];
                 }else if(preg_match("/^(.+)\(([0-9]+)\)$/",$v,$matchs)){
-                    $this->type = $matchs[1];
+                    $this->setType($matchs[1]);
                     $this->length = $matchs[2];
                 }else{
-                    $this->type = $v;
+                    $this->setType($v);
                 }
             }else if($k == "length"){
                 $this->length = $v;
@@ -113,17 +115,27 @@ class DatabaseColumn{
     }
 
     /**
+     * @param mixed $type
+     */
+    public function setType($type)
+    {
+        $this->type = $type;
+    }
+
+    /**
      * @return mixed
      */
     public function getType(){
         return $this->type;
     }
+
     /**
      * @return mixed
      */
     public function getNull(){
         return $this->null;
     }
+
     /**
      * @return mixed
      */

@@ -27,7 +27,12 @@ class ModelColumn{
      */
     public function getDBColumn(){
         if(!$this->dbcolumn){
-            $this->dbcolumn = new DatabaseColumn($this->column);
+            $column = $this->column;
+            if($column['type'] == 'url'){
+                $column['type'] = 'varchar';
+                $column['length'] = '250';
+            }
+            $this->dbcolumn = new DatabaseColumn($column);
         }
         return $this->dbcolumn;
     }
