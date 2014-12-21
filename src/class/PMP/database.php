@@ -30,9 +30,9 @@ class DatabaseReferencesField{
     }
 }
 /**
- * Class DatabaseField
+ * Class DatabaseColumn
  */
-class DatabaseField{
+class DatabaseColumn{
     private $name;
     private $type;
     private $length;
@@ -637,7 +637,7 @@ class Database{
      * @param $str
      * @return string
      */
-    private function convertColumn($val,DatabaseField $column){
+    private function convertColumn($val,DatabaseColumn $column){
         $result = $val;
         if($result){
             if($column->isString()){
@@ -789,7 +789,7 @@ class Database{
                         $value["Key"] = "unique";
                     }
                 }
-                $list[$key] = new DatabaseField($value);
+                $list[$key] = new DatabaseColumn($value);
             }
             return $list;
         }
@@ -1107,8 +1107,8 @@ class Database{
      * @param array $fields
      * @return string
      */
-    private function makeColumnsQuery(DatabaseField $field){
-        if(!($field instanceof DatabaseField)){
+    private function makeColumnsQuery(DatabaseColumn $field){
+        if(!($field instanceof DatabaseColumn)){
             $this->throwError("CreateTable Fields Error.");
         }
         $attr = array();

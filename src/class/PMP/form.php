@@ -362,7 +362,7 @@ class Form{
                 if($check){
                     foreach($this->models as $k => $v){
                         if($v->isExists($key)){
-                            if($v->get($key)->getDBField()->isUnique()){
+                            if($v->get($key)->getDBColumn()->isUnique()){
                                 $count = count($v->findBy(array($key => intval($value))));
                                 $check = ($count > 0) ? false : true;
                             }

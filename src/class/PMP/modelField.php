@@ -23,11 +23,11 @@ class ModelField{
     }
 
     /**
-     * @return DatabaseField
+     * @return DatabaseColumn
      */
-    public function getDBField(){
+    public function getDBColumn(){
         if(!$this->dbfield){
-            $this->dbfield = new DatabaseField($this->field);
+            $this->dbfield = new DatabaseColumn($this->field);
         }
         return $this->dbfield;
     }

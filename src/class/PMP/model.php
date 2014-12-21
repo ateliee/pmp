@@ -34,7 +34,7 @@ class Model{
                         $field->setField('field',$key);
                     }
                     if($field && is_object($field) && ($field instanceof ModelField)){
-                        //$this->table_fields[$key] = new DatabaseField(self::makeFieldToDBFieldData($key,$field));
+                        //$this->table_fields[$key] = new DatabaseColumn(self::makeFieldToDBFieldData($key,$field));
                         $this->table_fields[$key] = $field;
                     }else{
                         throw new PMPException($class_name.'->'.$v.'() must be return ModelField');
@@ -103,10 +103,10 @@ class Model{
     /**
      * @return array
      */
-    private function getDBFields(){
+    private function getDBColumns(){
         $fields = array();
         foreach($this->table_fields as $key => $colum){
-            $fields[$key] = $colum->getDBField();
+            $fields[$key] = $colum->getDBColumn();
         }
         return $fields;
     }
@@ -150,7 +150,7 @@ class Model{
      * @return string
      */
     private static function convertColumnsToFormType(ModelField $column){
-        $field = $column->getDBField();
+        $field = $column->getDBColumn();
         $ctype = "text";
         if($field->getAi()){
             $ctype = "hidden";
@@ -175,7 +175,7 @@ class Model{
      * @return array
      */
     private static function convertColumnsToFormAttr(ModelField $column){
-        $field = $column->getDBField();
+        $field = $column->getDBColumn();
         $attr = array();
         $attr["format"] = $column->getOption("format",null);
         $attr["choices"] = $column->getOption("choices",null);
@@ -242,7 +242,7 @@ class Model{
      */
     public function findQuery($args=array()){
         $select_fields = array();
-        foreach($this->getDBFields() as $k => $v){
+        foreach($this->getDBColumns() as $k => $v){
             $select_fields[$k] = $k;
         }
         $query = $this->db->createQuery()
@@ -314,15 +314,15 @@ class Model{
         $result = null;
         $columns = $this->toArray();
         if($this->id){
-            $result = $this->db->update($this->getTableName(),$columns,$this->getDBFields(),array("id" => $this->id));
+            $result = $this->db->update($this->getTableName(),$columns,$this->getDBColumns(),array("id" => $this->id));
             if($this->db->affectedRows() <= 0){
                 if($this->db->createQuery($this->getTableName())->find("`id`")->where("`id`=:id")->execute(array("id" => $this->id))->findRow() <= 0){
-                    $result = $this->db->insert($this->getTableName(),$columns,$this->getDBFields());
+                    $result = $this->db->insert($this->getTableName(),$columns,$this->getDBColumns());
                     $this->id = $this->db->lastId();
                 }
             }
         }else{
-            $result = $this->db->insert($this->getTableName(),$columns,$this->getDBFields());
+            $result = $this->db->insert($this->getTableName(),$columns,$this->getDBColumns());
             $this->id = $this->db->lastId();
         }
         return $result;
@@ -372,7 +372,7 @@ class Model{
     public function upgrade(){
         $table_name = $this->getTableName();
 
-        $columns = $this->getDBFields();
+        $columns = $this->getDBColumns();
         if($this->db->checkTableExists($table_name)){
             $results = $this->db->getTableColumns($table_name);
             $results_index = $this->db->getTableIndex($table_name);
