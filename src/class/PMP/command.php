@@ -105,7 +105,7 @@ class CommandAction{
 
     /**
      * @param $key
-     * @return mixed
+     * @return CommandShell
      */
     public function getShell($key)
     {
