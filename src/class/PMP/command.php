@@ -2,10 +2,28 @@
 namespace PMP;
 
 /**
+ * Class Shell
+ * @package PMP
+ */
+class Shell
+{
+    /**
+     * @param $str
+     * @return mixed
+     */
+    public function escape($str)
+    {
+        $str = str_replace("\\","\\\\",$str);
+        $str = str_replace("\"","\\\"",$str);
+        return $str;
+    }
+}
+
+/**
  * Class CommandShell
  * @package PMP
  */
-class CommandShell{
+class CommandShell extends Shell{
     private $message;
     private $callback;
     private $result;
@@ -72,8 +90,9 @@ class CommandShell{
 
 /**
  * Class CommandAction
+ * @package PMP
  */
-class CommandAction{
+class CommandAction extends Shell{
     private $description;
     private $shells;
     private $callback;
