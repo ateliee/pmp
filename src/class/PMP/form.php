@@ -2,6 +2,102 @@
 namespace PMP;
 
 /**
+ * Class FormElement
+ * @package PMP
+ */
+class FormElement{
+    private $type;
+    private $attr;
+    private $prex;
+    private $value;
+
+    function __construct($type,$prex=NULL){
+        $this->type = $type;
+        $this->attr = array();
+        $this->prex = $prex;
+        $this->value = null;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getType()
+    {
+        return $this->type;
+    }
+
+    /**
+     * @param $type
+     */
+    public function setType($type)
+    {
+        $this->type = $type;
+    }
+
+    /**
+     * @param mixed $attr
+     */
+    public function setAttr($attr)
+    {
+        $this->attr = $attr;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getAttr()
+    {
+        return $this->attr;
+    }
+
+    /**
+     * @param $key
+     * @param null $default
+     * @return null
+     */
+    public function getAttrValue($key,$default=null)
+    {
+        if(isset($this->attr[$key])){
+            return $this->attr[$key];
+        }
+        return $default;
+    }
+
+    /**
+     * @return null
+     */
+    public function getPrex()
+    {
+        return $this->prex;
+    }
+
+    /**
+     * @param mixed $prex
+     */
+    public function setPrex($prex)
+    {
+        $this->prex = $prex;
+    }
+
+    /**
+     * @param mixed $value
+     */
+    public function setValue($value)
+    {
+        $this->value = $value;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getValue()
+    {
+        return $this->value;
+    }
+
+}
+
+/**
  * Class Form
  * @package PMP
  */
@@ -27,19 +123,26 @@ class Form{
     public function add($name,$type,$attr=array(),$prex=NULL){
         $key = $name;
         if(isset($this->elem[$key])){
-            $this->elem[$key]["type"] = $type;
-            $this->elem[$key]["attr"] = array_merge($this->elem[$key]["attr"],$this->makeAttr($key,$type,$attr));
+            $this->elem[$key]->setType($type);
+            $this->elem[$key]->setAttr(array_merge($this->elem[$key]->getAttr(),$this->makeAttr($key,$type,$attr)));
             if($prex !== NULL){
-                $this->elem[$key]["prex"] = $prex;
+                $this->elem[$key]->setPrex($prex);
             }
         }else{
-            $this->elem[$key] = array(
-                "type" => $type,
-                "attr" => $this->makeAttr($name,$type,is_array($attr) ? $attr : array()),
-                "prex" => $prex
-            );
+            $elm = new FormElement($type,$prex);
+            $elm->setAttr($this->makeAttr($name,$type,is_array($attr) ? $attr : array()));
+            $this->addElement($key,$elm);
         }
         return $this;
+    }
+
+    /**
+     * @param $key
+     * @param FormElement $elm
+     */
+    public function addElement($key,FormElement $elm)
+    {
+        $this->elem[$key] = $elm;
     }
 
     /**
@@ -59,7 +162,7 @@ class Form{
      */
     public function setValue($name,$value){
         if(isset($this->elem[$name])){
-            $this->elem[$name]["value"] = $value;
+            $this->elem[$name]->setValue($value);
             return true;
         }
         return false;
@@ -70,8 +173,8 @@ class Form{
      * @return null
      */
     public function getValue($name){
-        if(isset($this->elem[$name]) && isset($this->elem[$name]["value"])){
-            return $this->elem[$name]["value"];
+        if(isset($this->elem[$name])){
+            return $this->elem[$name]->getValue();
         }
         return null;
     }
@@ -111,9 +214,10 @@ class Form{
         $labels = array();
         $values = array();
         foreach($this->elem as $name => $value){
-            $val = (isset($value["value"]) ? $value["value"] : "");
-            $attr = $value["attr"];
-            $attr["name"] = $value["prex"].$name;
+            $val = $value->getValue();
+            $val = $val ? $val : "";
+            $attr = $value->getAttr();
+            $attr["name"] = $value->getPrex().$name;
 
             $id = "";
             if(isset($attr["id"])){
@@ -125,7 +229,7 @@ class Form{
             }
             $label = new htmlElement('label',array('for' => $id),$this->escape($label));
 
-            $tags[$name] = $this->getStringHTML($value["type"],$val,$attr);
+            $tags[$name] = $this->getStringHTML($value->getType(),$val,$attr);
             $values[$name] = $val;
 
             $labels[$name] = $label;
@@ -265,7 +369,7 @@ class Form{
     public function bindRequest(RequestVars $request){
         $this->request = $request;
         foreach($this->elem as $name => $value){
-            $v = $this->request->get($value["prex"].$name,null);
+            $v = $this->request->get($value->getPrex().$name,null);
             if($v !== null){
                 $this->setValue($name,$v);
             }
@@ -283,13 +387,10 @@ class Form{
             $check_all = true;
             foreach($this->elem as $key => $val){
                 $check = true;
-                $label = $key;
-                if(isset($val["attr"]["label"])){
-                    $label = ($val["attr"]["label"]);
-                }
-                $form_key = $val["prex"].$key;
+                $label = $val->getAttrValue('label',$key);
+                $form_key = $val->getPrex().$key;
                 $value = $request->get($form_key,"");
-                if(isset($val["attr"]["required"]) && ($val["attr"]["required"] === true)){
+                if($val->getAttrValue('required',false) === true){
                     if(($request->is($form_key)) && ($value != "")){
                         $check = true;
                     }else{
@@ -298,47 +399,47 @@ class Form{
                     }
                 }
                 if($value != ""){
-                    if($check && isset($val["attr"]["format"])){
-                        if(!preg_match("/^".$val["attr"]["format"]."$/",$value)){
+                    if($check && $val->getAttrValue("format")){
+                        if(!preg_match("/^".$val->getAttrValue("format")."$/",$value)){
                             $this->errors[$key] = $this->getErrorMessage("format",$label);
                             $check = false;
                         }
                     }
                 }
                 if(($request->is($form_key)) && ($value != "")){
-                    if($val["type"] == "email"){
+                    if($val->getType() == "email"){
                         if(!$this->checkMail($value)){
                             $this->errors[$key] = $this->getErrorMessage("email",$label);
                             $check = false;
                         }
-                    }else if($val["type"] == "url"){
+                    }else if($val->getType() == "url"){
                         if(!$this->checkURL($value)){
                             $this->errors[$key] = $this->getErrorMessage("url",$label);
                             $check = false;
                         }
-                    }else if($val["type"] == "date"){
+                    }else if($val->getType() == "date"){
                         if(!$this->checkDateString($value)){
                             $this->errors[$key] = $this->getErrorMessage("date",$label);
                             $check = false;
                         }
-                    }else if($val["type"] == "datetime"){
+                    }else if($val->getType() == "datetime"){
                         if(!$this->checkDateTimeString($value)){
                             $this->errors[$key] = $this->getErrorMessage("datetime",$label);
                             $check = false;
                         }
-                    }else if($val["type"] == "time"){
+                    }else if($val->getType() == "time"){
                         if(!$this->checkTimeString($value)){
                             $this->errors[$key] = $this->getErrorMessage("time",$label);
                             $check = false;
                         }
-                    }else if($val["type"] == "password"){
+                    }else if($val->getType() == "password"){
                         if(!preg_match("/^([0-9a-zA-Z]*)$/",$value)){
                             $this->errors[$key] = $this->getErrorMessage("password",$label);
                             $check = false;
                         }
                     }
-                    if($check && isset($val["attr"]["choices"])){
-                        $choices = $val["attr"]["choices"];
+                    if($check && $val->getAttrValue("choices")){
+                        $choices = $val->getAttrValue("choices");
                         $c = true;
                         if(!$value){
                             $c = false;
