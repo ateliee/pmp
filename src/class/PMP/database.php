@@ -308,6 +308,62 @@ class Database{
     }
 
     /**
+     * @return string
+     */
+    public function getHost()
+    {
+        return $this->host;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getUsername()
+    {
+        return $this->username;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getPassword()
+    {
+        return $this->password;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getMode()
+    {
+        return $this->mode;
+    }
+
+    /**
+     * @return array
+     */
+    public function getLogs()
+    {
+        return $this->logs;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getDbName()
+    {
+        return $this->dbName;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCharset()
+    {
+        return $this->charset;
+    }
+
+    /**
      * @param $message
      * @throws DatabaseException
      */
