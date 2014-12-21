@@ -12,20 +12,20 @@ class AuthModel extends Model implements AuthInterface{
     /**
      * @return array
      */
-    public function useridField(){
-        return new ModelField(array("type" => "varchar","length" => 250,"null" => false,"unique"=> true,"comment" => __("userid")));
+    public function useridColumn(){
+        return new ModelColumn(array("type" => "varchar","length" => 250,"null" => false,"unique"=> true,"comment" => __("userid")));
     }
     /**
      * @return array
      */
-    public function passwordField(){
-        return new ModelField(array("type" => "varchar","length" => 30,"null" => false,"comment" => __("password")));
+    public function passwordColumn(){
+        return new ModelColumn(array("type" => "varchar","length" => 30,"null" => false,"comment" => __("password")));
     }
     /**
      * @return array
      */
-    public function saltField(){
-        return new ModelField(array("type" => "varchar","length" => 32,"null" => false,"comment" => __("salt string"),"form" => false));
+    public function saltColumn(){
+        return new ModelColumn(array("type" => "varchar","length" => 32,"null" => false,"comment" => __("salt string"),"form" => false));
     }
 
     function __construct(){

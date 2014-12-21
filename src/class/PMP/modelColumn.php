@@ -2,22 +2,22 @@
 namespace PMP;
 
 /**
- * Class ModelField
+ * Class ModelColumn
  * @package PMP
  */
-class ModelField{
-    protected $dbfield;
-    protected $field;
+class ModelColumn{
+    protected $dbcolumn;
+    protected $column;
     protected $options;
 
     function __construct($field){
-        $this->field = array();
+        $this->column = array();
         foreach($field as $k => $v){
             $k = strtolower($k);
             if(in_array($k,array('form','choices','format'))){
                 $this->options[$k] = $v;
             }else{
-                $this->field[$k] = $v;
+                $this->column[$k] = $v;
             }
         }
     }
@@ -26,10 +26,10 @@ class ModelField{
      * @return DatabaseColumn
      */
     public function getDBColumn(){
-        if(!$this->dbfield){
-            $this->dbfield = new DatabaseColumn($this->field);
+        if(!$this->dbcolumn){
+            $this->dbcolumn = new DatabaseColumn($this->column);
         }
-        return $this->dbfield;
+        return $this->dbcolumn;
     }
 
     /**
@@ -37,8 +37,8 @@ class ModelField{
      * @param $val
      * @return $this
      */
-    public function setField($key,$val){
-        $this->field[$key] = $val;
+    public function setColumn($key,$val){
+        $this->column[$key] = $val;
         return $this;
     }
 
@@ -47,9 +47,9 @@ class ModelField{
      * @param null $default
      * @return null
      */
-    public function getField($key,$default=null){
-        if(isset($this->field[$key])){
-            return $this->field[$key];
+    public function getColumn($key,$default=null){
+        if(isset($this->column[$key])){
+            return $this->column[$key];
         }
         return $default;
     }

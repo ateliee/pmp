@@ -10,10 +10,10 @@ class DatabaseException extends \Exception
 }
 
 /**
- * Class DatabaseReferencesField
+ * Class DatabaseReferencesColumn
  * @package PMP
  */
-class DatabaseReferencesField{
+class DatabaseReferencesColumn{
     private $name;
     private $table_name;
     private $column;
@@ -98,17 +98,17 @@ class DatabaseColumn{
                 if(is_array($v)){
 
                 }else{
-                    throw new DatabaseException('Database Field references not value ');
+                    throw new DatabaseException('Database Column references not value ');
                 }
             }else if(in_array($k,array('privileges'))){
             }else{
-                throw new DatabaseException('Database Field not support '.$k);
+                throw new DatabaseException('Database Column not support '.$k);
             }
         }
         if($this->name == ''){
-            throw new DatabaseException('Database Field not select name '.implode(',',$field));
+            throw new DatabaseException('Database Column not select name '.implode(',',$field));
         }else if($this->type == ''){
-            throw new DatabaseException('Database Field not select type'.implode(',',$field));
+            throw new DatabaseException('Database Column not select type'.implode(',',$field));
         }
     }
 
@@ -1109,7 +1109,7 @@ class Database{
      */
     private function makeColumnsQuery(DatabaseColumn $field){
         if(!($field instanceof DatabaseColumn)){
-            $this->throwError("CreateTable Fields Error.");
+            $this->throwError("CreateTable Columns Error.");
         }
         $attr = array();
         if($field->getAttribute() == "unsigned"){

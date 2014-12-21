@@ -83,7 +83,7 @@ class Form{
     public function createFormModel(Model &$model,$multi_form=false){
         $table_name = $model->getTablename();
 
-        $fields = $model->getFormFields();
+        $fields = $model->getFormColumns();
         foreach($fields as $key => $val){
             $prex = "";
             if($multi_form){

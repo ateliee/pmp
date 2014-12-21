@@ -23,21 +23,21 @@ class Model{
         foreach($class as $class_name){
             $methods = get_class_methods($class_name);
             foreach($methods as $k => $v){
-                if(preg_match("/^(.+)Field$/",$v,$matchs)){
+                if(preg_match("/^(.+)Column$/",$v,$matchs)){
                     $key = $matchs[1];
                     try{
                         $field = ($this->{$v}());
                     }catch (PMPException $e){
                         throw new PMPException($class_name.'->'.$v.'() is return value error.'.$e->getMessage());
                     }
-                    if(!$field->getField('field')){
-                        $field->setField('field',$key);
+                    if(!$field->getColumn('field')){
+                        $field->setColumn('field',$key);
                     }
-                    if($field && is_object($field) && ($field instanceof ModelField)){
-                        //$this->table_fields[$key] = new DatabaseColumn(self::makeFieldToDBFieldData($key,$field));
+                    if($field && is_object($field) && ($field instanceof ModelColumn)){
+                        //$this->table_fields[$key] = new DatabaseColumn(self::makeColumnToDBColumnData($key,$field));
                         $this->table_fields[$key] = $field;
                     }else{
-                        throw new PMPException($class_name.'->'.$v.'() must be return ModelField');
+                        throw new PMPException($class_name.'->'.$v.'() must be return ModelColumn');
                     }
                 }
             }
@@ -53,8 +53,8 @@ class Model{
     /**
      * @return array
      */
-    public function idField(){
-        return new ModelField(array("type" => "bigint","ai" => true,"null" => false,"comment" => __("primary key")));
+    public function idColumn(){
+        return new ModelColumn(array("type" => "bigint","ai" => true,"null" => false,"comment" => __("primary key")));
     }
 
     /**
@@ -70,9 +70,9 @@ class Model{
      * @return array
      */
     /*
-    private static function makeFieldToDBFieldData($name,$field){
+    private static function makeColumnToDBColumnData($name,$field){
         return array(
-            "Field" => $name,
+            "Column" => $name,
             "Type" => (isset($field["type"]) ? $field["type"] : "").(isset($field["length"]) ? "(".$field["length"].")" : "").(isset($field["attribute"]) ? " ".$field["attribute"] : ""),
             "Null" => (isset($field["null"]) && ($field["null"] == false) ? "NO" : "YES"),
             "Default" => (isset($field["default"]) ? $field["default"] : false),
@@ -96,7 +96,7 @@ class Model{
     /**
      * @return array
      */
-    public function getFields(){
+    public function getColumns(){
         return $this->table_fields;
     }
 
@@ -114,7 +114,7 @@ class Model{
     /**
      * @return array
      */
-    public function getFormFields(){
+    public function getFormColumns(){
         $columns = array();
         foreach($this->table_fields as $k => $v){
             if($v->getOption("form",true)){
@@ -146,10 +146,10 @@ class Model{
     }
 
     /**
-     * @param ModelField $column
+     * @param ModelColumn $column
      * @return string
      */
-    private static function convertColumnsToFormType(ModelField $column){
+    private static function convertColumnsToFormType(ModelColumn $column){
         $field = $column->getDBColumn();
         $ctype = "text";
         if($field->getAi()){
@@ -171,10 +171,10 @@ class Model{
     }
 
     /**
-     * @param ModelField $column
+     * @param ModelColumn $column
      * @return array
      */
-    private static function convertColumnsToFormAttr(ModelField $column){
+    private static function convertColumnsToFormAttr(ModelColumn $column){
         $field = $column->getDBColumn();
         $attr = array();
         $attr["format"] = $column->getOption("format",null);
@@ -229,7 +229,7 @@ class Model{
      */
     public function toArray(){
         $columns = array();
-        foreach($this->getFields() as $k => $v){
+        foreach($this->getColumns() as $k => $v){
             $columns[$k] = $this->{$k};
         }
         return $columns;
@@ -268,7 +268,7 @@ class Model{
 
     /*
     public function find($args){
-        $results = $this->db->findByOne($this->getTableName(),$this->getFields(),$args);
+        $results = $this->db->findByOne($this->getTableName(),$this->getColumns(),$args);
         if($results){
             $this->setParameters($results);
             return true;
@@ -278,7 +278,7 @@ class Model{
 
     public function findBy($args,$order=array(),$limit=0,$offset=0){
         return $this->db
-            ->find($this->getTableName(),$this->getFields(),$args,$order,$limit,$offset);
+            ->find($this->getTableName(),$this->getColumns(),$args,$order,$limit,$offset);
     }
 
     public function findAll($order=array(),$limit=0,$offset=0){
