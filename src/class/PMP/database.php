@@ -282,12 +282,14 @@ class Database{
     private $charset;
     private $result;
     private $mode;
+    private $logs;
 
     function  __construct(){
         $this->host = "localhost";
         $this->linkId = NULL;
         $this->charset = "utf8";
         $this->result = NULL;
+        $this->logs = array();
         $this->setMode(self::MODE_MYSQLI);
 
         self::setCurrentDB($this);
@@ -446,8 +448,9 @@ class Database{
             $this->result = mysqli_query($this->linkId, $sql);
         } else if ($this->mode == self::MODE_PDO) {
         }
+        $this->logs[] = $sql;
         if(!$this->result){
-            $this->throwError("SQL Error.¥nError Message --> ".$this->error()." SQL --> \"".$sql."\"");
+            $this->throwError("SQL Error.\nError Message --> ".$this->error()."\nSQL --> \"".$sql."\"\n");
         }
         return $this;
     }
@@ -546,7 +549,7 @@ class Database{
             return mysql_error($this->linkId);
         } else if ($this->mode == self::MODE_MYSQLI) {
             return mysqli_error($this->linkId);
-        } else if ($tihs->mode == self::MODE_PDO){
+        } else if ($this->mode == self::MODE_PDO){
         }
         return null;
     }
@@ -665,9 +668,9 @@ class Database{
     private function refresh()
     {
         if ($this->mode == self::MODE_MYSQL) {
-            mysql_data_seek($this->resResult, 0);
+            mysql_data_seek($this->result, 0);
         } else if ($this->mode == self::MODE_MYSQLI) {
-            mysqli_data_seek($this->resResult, 0);
+            mysqli_data_seek($this->result, 0);
         } else if ($this->mode == self::MODE_PDO) {
         }
         return $this;
