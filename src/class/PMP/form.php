@@ -98,6 +98,46 @@ class FormElement{
 }
 
 /**
+ * Class FormError
+ * @package PMP
+ */
+class FormError
+{
+    private $errors;
+    function __construct($key=null,$message=null){
+        $this->errors = array();
+        $this->add($key,$message);
+    }
+
+    /**
+     * @param $key
+     * @param $message
+     */
+    function add($key,$message)
+    {
+        if($key && $message){
+            $this->errors[$key] = $message;
+        }
+    }
+
+    /**
+     * @return int
+     */
+    function count()
+    {
+        return count($this->errors);
+    }
+
+    /**
+     * @return string
+     */
+    function __toString()
+    {
+        return implode("\n",$this->errors);
+    }
+}
+
+/**
  * Class Form
  * @package PMP
  */
@@ -386,59 +426,49 @@ class Form{
             $request = $this->request;
             $check_all = true;
             foreach($this->elem as $key => $val){
-                $check = true;
+                $error = new FormError();
                 $label = $val->getAttrValue('label',$key);
                 $form_key = $val->getPrex().$key;
                 $value = $request->get($form_key,"");
                 if($val->getAttrValue('required',false) === true){
-                    if(($request->is($form_key)) && ($value != "")){
-                        $check = true;
-                    }else{
-                        $this->errors[$key] = $this->getErrorMessage("required",$label);
-                        $check = false;
+                    if(!(($request->is($form_key)) && ($value != ""))){
+                        $error->add('required',$this->getErrorMessage('required',$label));
                     }
                 }
                 if($value != ""){
-                    if($check && $val->getAttrValue("format")){
+                    if(($error->count() <= 0) && $val->getAttrValue("format")){
                         if(!preg_match("/^".$val->getAttrValue("format")."$/",$value)){
-                            $this->errors[$key] = $this->getErrorMessage("format",$label);
-                            $check = false;
+                            $error->add('format',$this->getErrorMessage('format',$label));
                         }
                     }
                 }
                 if(($request->is($form_key)) && ($value != "")){
                     if($val->getType() == "email"){
                         if(!$this->checkMail($value)){
-                            $this->errors[$key] = $this->getErrorMessage("email",$label);
-                            $check = false;
+                            $error->add('email',$this->getErrorMessage('email',$label));
                         }
                     }else if($val->getType() == "url"){
                         if(!$this->checkURL($value)){
-                            $this->errors[$key] = $this->getErrorMessage("url",$label);
-                            $check = false;
+                            $error->add('url',$this->getErrorMessage('url',$label));
                         }
                     }else if($val->getType() == "date"){
                         if(!$this->checkDateString($value)){
-                            $this->errors[$key] = $this->getErrorMessage("date",$label);
-                            $check = false;
+                            $error->add('date',$this->getErrorMessage('date',$label));
                         }
                     }else if($val->getType() == "datetime"){
                         if(!$this->checkDateTimeString($value)){
-                            $this->errors[$key] = $this->getErrorMessage("datetime",$label);
-                            $check = false;
+                            $error->add('datetime',$this->getErrorMessage('datetime',$label));
                         }
                     }else if($val->getType() == "time"){
                         if(!$this->checkTimeString($value)){
-                            $this->errors[$key] = $this->getErrorMessage("time",$label);
-                            $check = false;
+                            $error->add('time',$this->getErrorMessage('time',$label));
                         }
                     }else if($val->getType() == "password"){
                         if(!preg_match("/^([0-9a-zA-Z]*)$/",$value)){
-                            $this->errors[$key] = $this->getErrorMessage("password",$label);
-                            $check = false;
+                            $error->add('password',$this->getErrorMessage('password',$label));
                         }
                     }
-                    if($check && $val->getAttrValue("choices")){
+                    if(($error->count() <= 0) && $val->getAttrValue("choices")){
                         $choices = $val->getAttrValue("choices");
                         $c = true;
                         if(!$value){
@@ -455,23 +485,25 @@ class Form{
                             }
                         }
                         if(!$c){
-                            $this->errors[$key] = $this->getErrorMessage("choices",$label);
-                            $check = false;
+                            $error->add('choices',$this->getErrorMessage('choices',$label));
                         }
                     }
                 }
-                if($check){
+                if($error->count() <= 0){
                     foreach($this->models as $k => $v){
                         if($v->isExists($key)){
                             if($v->get($key)->getDBColumn()->isUnique()){
                                 $count = count($v->findBy(array($key => intval($value))));
-                                $check = ($count > 0) ? false : true;
+                                if($count > 0){
+                                    $error->add('unique',$this->getErrorMessage('unique',$label));
+                                }
                             }
                             $v->setParameter($key,$value);
                         }
                     }
                 }
-                if(!$check){
+                if($error->count() > 0){
+                    $this->errors[$key] = $error;
                     $check_all = false;
                 }
             }
