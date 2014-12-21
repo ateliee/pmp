@@ -118,7 +118,12 @@ class Model{
         $columns = array();
         foreach($this->table_fields as $k => $v){
             if($v->getOption("form",true)){
-                $get = $this->{$k};
+                $method = 'get'.ucfirst($k);
+                if(method_exists($this,$method)){
+                    $get = $this->{$method}();
+                }else{
+                    $get = $this->{$k};
+                }
                 $columns[$k] = array(
                     "type" => self::convertColumnsToFormType($v),
                     "value" => $get,

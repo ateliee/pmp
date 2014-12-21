@@ -307,27 +307,27 @@ class Form{
                 }
                 if(($request->is($form_key)) && ($value != "")){
                     if($val["type"] == "email"){
-                        if(!checkMail($value)){
+                        if(!$this->checkMail($value)){
                             $this->errors[$key] = $this->getErrorMessage("email",$label);
                             $check = false;
                         }
                     }else if($val["type"] == "url"){
-                        if(!checkURL($value)){
+                        if(!$this->checkURL($value)){
                             $this->errors[$key] = $this->getErrorMessage("url",$label);
                             $check = false;
                         }
                     }else if($val["type"] == "date"){
-                        if(!checkDateString($value)){
+                        if(!$this->checkDateString($value)){
                             $this->errors[$key] = $this->getErrorMessage("date",$label);
                             $check = false;
                         }
                     }else if($val["type"] == "datetime"){
-                        if(!checkDateTimeString($value)){
+                        if(!$this->checkDateTimeString($value)){
                             $this->errors[$key] = $this->getErrorMessage("datetime",$label);
                             $check = false;
                         }
                     }else if($val["type"] == "time"){
-                        if(!checkTimeString($value)){
+                        if(!$this->checkTimeString($value)){
                             $this->errors[$key] = $this->getErrorMessage("time",$label);
                             $check = false;
                         }
@@ -416,5 +416,68 @@ class Form{
             default:
                 break;
         }
+    }
+
+    /**
+     * check string to url
+     * @param $url
+     * @return int
+     */
+    protected function checkURL($url)
+    {
+        $preg_str = '/^(https?|ftp)(:\/\/[-_.!~*\'()a-zA-Z0-9;\/?:\@&=+\$,%#]+)$/';
+        return preg_match($preg_str, $url);
+    }
+
+    /**
+     * check string to mail address
+     * @param $mail
+     * @return int
+     */
+    protected function checkMail($mail)
+    {
+        $preg_str = "/^([a-zA-Z0-9])+([a-zA-Z0-9\\._-])*@([a-zA-Z0-9_-])+([a-zA-Z0-9\\._-]+)+$/";
+        return preg_match($preg_str, $mail);
+    }
+
+    /**
+     * @param $time
+     * @return bool
+     */
+    protected function checkDateString($time)
+    {
+        if(preg_match("/^([0-9]{4})\-([0-9]{2})\-([0-9]{2})$/",$time)){
+            return true;
+        }else if(preg_match("/^([0-9]{4})\/([0-9]{2})\/([0-9]{2})$/",$time)){
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * @param $time
+     * @return bool
+     */
+    protected function checkTimeString($time)
+    {
+        if(preg_match("/^([0-9]{4}):([0-9]{2}):([0-9]{2}?)$/",$time)){
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * @param $time
+     * @return bool
+     */
+    protected function checkDateTimeString($time)
+    {
+        if(preg_match("/^(.+) (.+)$/",$time)){
+            list($d,$t) = explode(" ",$time);
+            if($this->checkDateString($d) && $this->checkTimeString($t)){
+                return true;
+            }
+        }
+        return false;
     }
 }
