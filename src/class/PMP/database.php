@@ -187,6 +187,7 @@ class DatabaseField{
             "int",
             "bigint",
             "smallint",
+            "medium",
             "tinyint"
         ));
     }
@@ -649,7 +650,7 @@ class Database{
             $result = $column->getDefault();
         }
         if($result !== NULL){
-            if($column->isString() || $column->isText()){
+            if($column->isString() || $column->isText() || $column->isDate()){
                 return "'".$this->escape($result)."'";
             }else{
                 return $this->escape($result);
