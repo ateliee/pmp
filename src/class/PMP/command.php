@@ -17,6 +17,27 @@ class Shell
         $str = str_replace("\"","\\\"",$str);
         return $str;
     }
+
+    /**
+     * @param $str
+     * @return string
+     */
+    public function outputLine($str)
+    {
+        $command = $str."\n";
+        print $command;
+        return $command;
+    }
+
+    /**
+     * @param $command
+     * @param $output
+     * @return string
+     */
+    public function exec($command,&$output)
+    {
+        return exec($command,$output);
+    }
 }
 
 /**
