@@ -30,6 +30,16 @@ class Shell
     }
 
     /**
+     * @param $str
+     * @return string
+     */
+    public function exitLine($str)
+    {
+        $command = $str."\n";
+        exit($command);
+    }
+
+    /**
      * @param $command
      * @param $output
      * @return string
