@@ -21,10 +21,12 @@ class Model{
         $class_name = get_class($this);
         $class = array_merge($parents_class,array($class_name => $class_name));
         foreach($class as $class_name){
-            $methods = get_class_methods($class_name);
-            foreach($methods as $k => $v){
-                if(preg_match("/^(.+)Column$/",$v,$matchs)){
-                    $key = $matchs[1];
+            $vars = get_class_vars($class_name);
+            foreach($vars as $k => $v){
+                $method_name = str_replace('_','',$k);
+                if(method_exists($this,$method_name.'Column')){
+                    $v = $method_name.'Column';
+                    $key = $k;
                     try{
                         $field = ($this->{$v}());
                     }catch (PMPException $e){
@@ -34,7 +36,6 @@ class Model{
                         $field->setColumn('field',$key);
                     }
                     if($field && is_object($field) && ($field instanceof ModelColumn)){
-                        //$this->table_fields[$key] = new DatabaseColumn(self::makeColumnToDBColumnData($key,$field));
                         $this->table_fields[$key] = $field;
                     }else{
                         throw new PMPException($class_name.'->'.$v.'() must be return ModelColumn');
