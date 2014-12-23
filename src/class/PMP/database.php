@@ -712,34 +712,76 @@ class Database{
     }
 
     /**
-     * @param $sql
+     * @param $value
+     * @param $prex
+     * @param $replace
+     * @return mixed
+     */
+    public function replacePrex($value,$prex,$replace)
+    {
+        if(!$prex){
+            return $value;
+        }
+        $result = array();
+        foreach($value as $key => $val){
+            $k = preg_replace('/^'.$prex.'/',$replace,$key);
+            $result[$k] = $val;
+        }
+        return $replace;
+    }
+
+    /**
+     * @param null $prex
+     * @param null $replace
      * @return array|null
      */
-    public function getResults(){
+    public function getResults($prex=null,$replace=null){
         $list = null;
         if($this->result){
             $list = array();
             while ($value = $this->fetchArray(self::QUERY_ASSOC)) {
-                $list[] = $value;
+                $list[] = $this->replacePrex($value,$prex,$replace);
             }
         }
         return $list;
     }
 
     /**
-     * @param $sql
+     * @param null $prex
+     * @param null $replace
      * @return array|null
-     * @throws PMPException
      */
-    public function getResult(){
+    public function getResult($prex=null,$replace=null){
         if($this->result){
             if($this->numRows() > 1){
                 $this->throwError("getResult() Error. result num not one.");
             }
-            return $this->fetchArray(self::QUERY_ASSOC);
+            $value = $this->fetchArray(self::QUERY_ASSOC);
+            return $this->replacePrex($value,$prex,$replace);
         }
         return null;
+    }
 
+    /**
+     * @param null $default
+     * @return mixed|null
+     */
+    public function getResultOne($default=null)
+    {
+        if($this->result){
+            if($this->numRows() > 1){
+                $this->throwError("getResult() Error. result num not one.");
+            }
+            while($value = $this->fetchArray(self::QUERY_ASSOC)){
+                $val = $default;
+                foreach($value as $k => $v){
+                    $val = $v;
+                    break;
+                }
+                return $val;
+            }
+        }
+        return $default;
     }
 
     /**
