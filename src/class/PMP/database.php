@@ -13,21 +13,84 @@ class DatabaseException extends \Exception
  * Class DatabaseReferencesColumn
  * @package PMP
  */
-class DatabaseReferencesColumn{
+class DatabaseReferencesColumn
+{
+    static $OPTION_RESTRICT = 'RESTRICT';
+    static $OPTION_CASCADE = 'CASCADE';
+    static $OPTION_SETNULL = 'SET NULL';
+    static $OPTION_NOACTION = 'NO ACTION';
+
     private $name;
     private $table_name;
     private $column;
     private $update;
     private $delete;
 
-    function  __construct($name,$table_name,$column,$update='CASCADE',$delete='CASCADE')
+    function  __construct($name,ModelReference $reference)
     {
         $this->name = $name;
-        $this->table_name = $table_name;
-        $this->column = $column;
-        $this->update = strtoupper($update);
-        $this->delete = strtoupper($delete);
+        $this->table_name = $reference->getModel()->getTableName();
+        $this->column = $reference->getColumn()->getName();
+        $this->update = $reference->getUpdate();
+        $this->delete = $reference->getDelete();
     }
+
+    /**
+     * @return mixed
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getTableName()
+    {
+        return $this->table_name;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getColumn()
+    {
+        return $this->column;
+    }
+
+    /**
+     * @param mixed $delete
+     */
+    public function setDelete($delete)
+    {
+        $this->delete = $delete;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getDelete()
+    {
+        return $this->delete;
+    }
+
+    /**
+     * @param mixed $update
+     */
+    public function setUpdate($update)
+    {
+        $this->update = $update;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getUpdate()
+    {
+        return $this->update;
+    }
+
 }
 
 /**
@@ -46,7 +109,7 @@ class DatabaseColumn{
     private $ai;
     private $comment;
     private $options;
-    private $references;
+    private $reference;
 
     function  __construct($field){
         $this->default = false;
@@ -96,12 +159,7 @@ class DatabaseColumn{
                 $this->options[$k] = $v;
             }else if($k == "ai"){
                 $this->ai = $v;
-            }else if($k == "references"){
-                if(is_array($v)){
-
-                }else{
-                    throw new DatabaseException('Database Column references not value ');
-                }
+            }else if($k == "reference"){
             }else if(in_array($k,array('privileges'))){
             }else{
                 throw new DatabaseException('Database Column not support '.$k);
@@ -112,6 +170,30 @@ class DatabaseColumn{
         }else if($this->type == ''){
             throw new DatabaseException('Database Column not select type'.implode(',',$field));
         }
+        if(isset($field['reference'])){
+            $name = $this->name.'_fk';
+            if($field['reference'] instanceof ModelReference){
+                $this->reference = new DatabaseReferencesColumn($name,$field['reference']);
+            }else{
+                throw new DatabaseException('Database Column references not value "reference" is not array. ');
+            }
+        }
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    /**
+     * @return \PMP\DatabaseReferencesColumn
+     */
+    public function getReference()
+    {
+        return $this->reference;
     }
 
     /**
@@ -283,8 +365,6 @@ class Database{
     const ENGINE_INNODB = "InnoDB";
     // connet
     private static $currentDB;
-    // manage
-    private static $management_model;
     // setting
     private $host;
     private $dbName;
@@ -296,7 +376,8 @@ class Database{
     private $mode;
     private $logs;
 
-    function  __construct(){
+    function  __construct()
+    {
         $this->host = "localhost";
         $this->linkId = NULL;
         $this->charset = "utf8";
@@ -372,25 +453,20 @@ class Database{
     }
 
     /**
-     * @param $model_name
+     * @return int
      */
-    static function addManagementModel($model_name){
-        if(!self::$management_model){
-            self::$management_model = array();
+    static function upgradeManagementModel()
+    {
+        $change_column_num = 0;
+        foreach(ModelManager::getModels() as $k => $v){
+            $model = (new $v);
+            $change_column_num += $model->upgrade();
         }
-        self::$management_model[] = $model_name;
-    }
-
-    /**
-     *
-     */
-    static function upgradeManagementModel(){
-        if(isset(self::$management_model)){
-            foreach(self::$management_model as $k => $v){
-                $model = (new $v);
-                $model->upgrade();
-            }
+        foreach(ModelManager::getModels() as $k => $v){
+            $model = (new $v);
+            $change_column_num += $model->addReference();
         }
+        return $change_column_num;
     }
 
     /**
@@ -948,7 +1024,8 @@ class Database{
      * @param string $after
      * @return Database
      */
-    private function alterTable($action,$table_name,$name,$options=array(),$after=""){
+    private function alterTable($action,$table_name,$name,$options=array(),$after="")
+    {
         $columns = (count($options) > 0) ? $this->makeColumnsQuery($options) : "";
         $sql = "ALTER TABLE ".$this->escapeColumn(":TABLE")." ".$action." ".$this->escapeColumn(":FIELD")." ".$columns.($after != "" ? " ".$after : "");
         return $this->createQuery()
@@ -956,6 +1033,47 @@ class Database{
                 "TABLE" => $table_name,
                 "FIELD" => $name
             ));
+    }
+
+    /**
+     * @param $table_name
+     * @param $name
+     * @param $column_name
+     * @param $target_table
+     * @param $target_name
+     * @param null $ondelete
+     * @param null $onupdate
+     * @return Database
+     */
+    public function addForeignKey($table_name,$name,$column_name,$target_table,$target_name,$ondelete=null,$onupdate=null)
+    {
+        $sql = sprintf(
+            "ALTER TABLE %s ADD %s FOREIGN KEY (%s) REFERENCES %s(%s) ",
+            $this->escapeColumn(":TABLE"),
+            ($name ? "CONSTRAINT ".$this->escapeColumn($name) : ""),
+            $this->escapeColumn($column_name),
+            $this->escapeColumn($target_table),
+            $this->escapeColumn($target_name),
+            ($ondelete ? "ON DELETE ".$ondelete : ""),
+            ($onupdate ? "ON UPDATE ".$onupdate : "")
+        );
+        return $this->createQuery()->queryExecute($sql,array(
+            "TABLE" => $table_name
+        ));
+    }
+
+    /**
+     * @param $table_name
+     * @param $name
+     * @return Database
+     */
+    public function dropForeignKey($table_name,$name)
+    {
+        $sql = sprintf("ALTER TABLE %s DROP FOREIGN KEY %s",$this->escapeColumn(":TABLE"),$this->escapeColumn(":NAME"));
+        return $this->createQuery()->queryExecute($sql,array(
+            "TABLE" => $table_name,
+            "NAME" => $name
+        ));
     }
 
     /**
@@ -1149,7 +1267,8 @@ class Database{
      * @param $options
      * @return mixed
      */
-    public function alterTableChange($table_name,$name,$options,$old_name = false){
+    public function alterTableChange($table_name,$name,$options,$old_name = false)
+    {
         $old_name = (!$old_name) ? $old_name : $name;
         $action = ($old_name != $name) ? "CHANGE COLUMN ".$old_name : "MODIFY COLUMN";
         return $this->alterTable($action,$table_name,$name,$options);
@@ -1541,7 +1660,8 @@ class SQL_Query{
      * @param array $param
      * @return Database
      */
-    public function queryExecute($sql,$param=array()){
+    public function queryExecute($sql,$param=array())
+    {
         return $this->database->query($this->formatSQL($sql,$param));
     }
 
@@ -1549,7 +1669,8 @@ class SQL_Query{
      * @param array $param
      * @return Database
      */
-    public function execute($param=array()){
+    public function execute($param=array())
+    {
         return $this->queryExecute($this->getSQL($param));
     }
 }

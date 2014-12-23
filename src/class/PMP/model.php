@@ -32,10 +32,10 @@ class Model{
                     }catch (PMPException $e){
                         throw new PMPException($class_name.'->'.$v.'() is return value error.'.$e->getMessage());
                     }
-                    if(!$field->getColumn('field')){
-                        $field->setColumn('field',$key);
-                    }
                     if($field && is_object($field) && ($field instanceof ModelColumn)){
+                        if(!$field->getName()){
+                            $field->setName($key);
+                        }
                         $this->table_fields[$key] = $field;
                     }else{
                         throw new PMPException($class_name.'->'.$v.'() must be return ModelColumn');
@@ -118,7 +118,7 @@ class Model{
     public function getFormColumns(){
         $columns = array();
         foreach($this->table_fields as $k => $v){
-            if($v->getOption("form",true)){
+            if($v->getFormenable()){
                 $method = 'get'.ucfirst($k);
                 if(method_exists($this,$method)){
                     $get = $this->{$method}();
@@ -145,7 +145,7 @@ class Model{
 
     /**
      * @param $key
-     * @return mixed
+     * @return ModelColumn
      */
     public function get($key){
         return $this->table_fields[$key];
@@ -180,11 +180,12 @@ class Model{
      * @param ModelColumn $column
      * @return array
      */
-    private static function convertColumnsToFormAttr(ModelColumn $column){
+    private static function convertColumnsToFormAttr(ModelColumn $column)
+    {
         $field = $column->getDBColumn();
         $attr = array();
-        $attr["format"] = $column->getOption("format",null);
-        $attr["choices"] = $column->getOption("choices",null);
+        $attr["format"] = $column->getFormat();
+        $attr["choices"] = $column->getChoices();
         $attr["label"] = $field->getComment();
         if($field->getLength() > 0){
             $attr["maxlength"] = $field->getLength();
@@ -316,7 +317,8 @@ class Model{
     /**
      * @return null
      */
-    public function flush(){
+    public function flush()
+    {
         $result = null;
         $columns = $this->toArray();
         if($this->id){
@@ -361,7 +363,8 @@ class Model{
      * @return $this
      * @throws PMPException
      */
-    public function setParameters($args,$method_call = true){
+    public function setParameters($args,$method_call = true)
+    {
         if(is_array($args)){
             foreach($args as $k => $v){
                 $this->setParameter($k,$v,$method_call);
@@ -373,9 +376,11 @@ class Model{
     }
 
     /**
-     * @return bool
+     * @return int
      */
-    public function upgrade(){
+    public function upgrade()
+    {
+        $change_column_num = 0;
         $table_name = $this->getTableName();
 
         $columns = $this->getDBColumns();
@@ -386,6 +391,7 @@ class Model{
             $change_columns = array();
             $delete_columns = array();
             $delete_indexs = array();
+            $delete_foreignkey = array();
             $columns_keys = array_keys($columns);
             foreach($columns as $k => $v){
                 if(isset($results[$k])){
@@ -403,6 +409,10 @@ class Model{
                 if($k == "PRIMARY"){
                     continue;
                 }
+                if(preg_match('/^.+_fk$/',$k,$matchs)){
+                    $delete_foreignkey[$k] = $k;
+                    continue;
+                }
                 if(!isset($columns[$k])){
                     $delete_indexs[$k] = $k;
                 }else{
@@ -412,28 +422,71 @@ class Model{
                 }
             }
             // update
+            foreach($delete_foreignkey as $k => $v){
+                if($this->db->dropForeignKey($table_name,$k) && ($this->db->affectedRows() > 0)){
+                    $change_column_num ++;
+                }
+            }
             foreach($delete_columns as $k => $v){
-                $this->db->alterTableDrop($table_name,$k);
+                if($this->db->alterTableDrop($table_name,$k) && ($this->db->affectedRows() > 0)){
+                    $change_column_num ++;
+                }
             }
             foreach($delete_indexs as $k => $v){
-                $this->db->alterTableDropIndex($table_name,$k);
+                if($this->db->alterTableDropIndex($table_name,$k) && ($this->db->affectedRows() > 0)){
+                    $change_column_num ++;
+                }
             }
             foreach($change_columns as $k => $v){
-                $this->db->alterTableChange($table_name,$k,$v,$k);
+                if($this->db->alterTableChange($table_name,$k,$v,$k) && ($this->db->affectedRows() > 0)){
+                    $change_column_num ++;
+                }
             }
             foreach($add_columns as $k => $v){
                 $current_key = array_search($k,$columns_keys);
-                $this->db->alterTableAdd($table_name,$k,$v,($current_key > 0 ? $this->db->escapeColumn($columns_keys[$current_key - 1]) : "FIRST"));
+                if($this->db->alterTableAdd(
+                    $table_name,$k,$v,($current_key > 0 ? $this->db->escapeColumn($columns_keys[$current_key - 1]) : "FIRST"))
+                    &&
+                    ($this->db->affectedRows() > 0)
+                ){
+                    $change_column_num ++;
+                }
             }
             // update callback
             $this->modelUpdate();
-            return true;
         }else{
-            $result = $this->db->createTable($table_name,$columns,$this->table_options);
+            if($result = $this->db->createTable($table_name,$columns,$this->table_options) && ($this->db->affectedRows() > 0)){
+                $change_column_num ++;
+            }
             // update callback
             $this->modelUpdate();
-            return $result;
         }
-        return false;
+        return $change_column_num;
+    }
+
+    /**
+     * @return int
+     */
+    public function addReference()
+    {
+        $change_column_num = 0;
+        $table_name = $this->getTableName();
+        $columns = $this->getDBColumns();
+        foreach($columns as $column){
+            if($column->getReference()){
+                if($this->db->addForeignKey(
+                    $table_name,
+                    $column->getReference()->getName(),
+                    $column->getName(),
+                    $column->getReference()->getTableName(),
+                    $column->getReference()->getColumn(),
+                    $column->getReference()->getDelete(),
+                    $column->getReference()->getUpdate()
+                )){
+                    $change_column_num ++;
+                }
+            }
+        }
+        return $change_column_num;
     }
 }
