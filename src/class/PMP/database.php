@@ -1048,7 +1048,7 @@ class Database{
     public function addForeignKey($table_name,$name,$column_name,$target_table,$target_name,$ondelete=null,$onupdate=null)
     {
         $sql = sprintf(
-            "ALTER TABLE %s ADD %s FOREIGN KEY (%s) REFERENCES %s(%s) ",
+            "ALTER TABLE %s ADD %s FOREIGN KEY (%s) REFERENCES %s(%s) %s %s ",
             $this->escapeColumn(":TABLE"),
             ($name ? "CONSTRAINT ".$this->escapeColumn($name) : ""),
             $this->escapeColumn($column_name),
