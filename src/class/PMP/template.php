@@ -250,6 +250,7 @@ class TemplateVarParser{
                 $p2 = $this->_createNodePointer($params,$num2);
                 $num3 = $num2 + 1;
                 $p3 = $this->_createNodePointer($params,$num3);
+
                 if($p1){
                     if($p2->getName() == ':'){
                         if($p3){
@@ -1005,7 +1006,7 @@ class Template {
         $result = array();
         foreach($node->getParams() as $key => $p){
             $key = $this->evaString($key);
-            $result[$key] = $this->convertTemplateVar($p,true);
+            $result[$key] = $this->convertTemplateVar($p,false);
         }
         return $result;
     }
@@ -1083,6 +1084,9 @@ class Template {
                     break;
                 case 'is_string':
                     $result = is_string($params[0]);
+                    break;
+                case 'in_array':
+                    $result = in_array($params[0],$params[1]);
                     break;
                 case 'boolval':
                     $result = boolval($params[0]);
