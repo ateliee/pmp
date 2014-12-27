@@ -60,6 +60,13 @@ class File{
     const PATHINFO_EXTENSION = 4;
     const PATHINFO_FILENAME = 8;
 
+    private $files;
+
+    function __construct()
+    {
+        $this->files = array();
+    }
+
     /**
      * @param $ext
      * @param string $default
@@ -279,7 +286,8 @@ class File{
      * @param bool $delete
      * @return bool
      */
-    static public function deleteDir($filename, $delete = true){
+    static public function deleteDir($filename, $delete = true)
+    {
         if(is_dir($filename)){
             $dh = opendir($filename);
             while ($file = readdir($dh)) {
@@ -296,5 +304,34 @@ class File{
             return true;
         }
         return false;
+    }
+
+    /**
+     * @param $filename
+     */
+    public function load($filename)
+    {
+        if(is_dir($filename)){
+            $dh = opendir($filename);
+            while ($file = readdir($dh)) {
+                if ($file == '.' || $file == '..') {
+                    continue;
+                }
+                $path = $filename . "/" . $file;
+                $this->files[] = $path;
+                $this->load($path);
+            }
+            closedir($dh);
+        }else if(file_exists($filename)){
+            $this->files[] = $filename;
+        }
+    }
+
+    /**
+     * @return array
+     */
+    public function getFiles()
+    {
+        return $this->files;
     }
 }
