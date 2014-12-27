@@ -2,24 +2,140 @@
 namespace PMP;
 
 /**
+ * Class RoutingRoule
+ * @package PMP
+ */
+class RoutingRoule
+{
+    private $url;
+    private $query;
+    private $class;
+    private $args;
+    private $requirements;
+
+    function __construct($url,$class='',$args=null,$requirements=array())
+    {
+        $this->url = $url;
+        $this->query = null;
+        $this->class = $class;
+        $this->args = $args;
+        $this->requirements = $requirements;
+    }
+
+    /**
+     * @param mixed $url
+     */
+    public function setUrl($url)
+    {
+        $this->url = $url;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getUrl()
+    {
+        return $this->url;
+    }
+
+    /**
+     * @param null $query
+     */
+    public function setQuery($query)
+    {
+        $this->query = $query;
+    }
+
+
+    /**
+     * @return null
+     */
+    public function getQuery()
+    {
+        return $this->query;
+    }
+
+    /**
+     * @return string
+     */
+    public function getClass()
+    {
+        return $this->class;
+    }
+
+    /**
+     * @return null
+     */
+    public function getArgs()
+    {
+        return $this->args;
+    }
+
+    /**
+     * @return array
+     */
+    public function getRequirements()
+    {
+        return $this->requirements;
+    }
+
+}
+
+/**
  * Class Routing
  * @package PMP
  */
-class Routing{
+class Routing
+{
     static private $roules = array();
+    private $prex;
+    private $prex_url;
 
     function  __construct(){
+        $this->prex = null;
+        $this->prex_url = null;
+    }
+
+    /**
+     * @param $prex
+     * @param $prex_url
+     */
+    public function setPrex($prex,$prex_url)
+    {
+        $this->prex = $prex;
+        $this->prex_url = $prex_url;
     }
 
     /**
      * @param $name
-     * @param $rule
+     * @param RoutingRoule $roule
      * @param string $class
      * @param null $args
      * @param array $requirements
      */
-    public function add($name,$rule,$class="",$args=null,$requirements=array()){
-        self::$roules[$name] = array("rule" => $rule,"class" => $class,"args" => $args,"requirements" => $requirements);
+    public function add($name,RoutingRoule $roule)
+    {
+        if($this->prex && $this->prex_url){
+            if($name != ''){
+                $name = $this->prex.'_'.$name;
+            }else{
+                $name = $this->prex.$name;
+            }
+            $roule->setUrl($this->prex_url.$roule->getUrl());
+        }
+        self::$roules[$name] = $roule;
+    }
+
+    /**
+     * @param $name
+     * @return RoutingRoule|null
+     */
+    static function getRoule($name)
+    {
+        if(!isset(self::$roules[$name])){
+            return null;
+        }
+        return self::$roules[$name];
     }
 
     /**
@@ -36,7 +152,14 @@ class Routing{
      */
     static function generateUrl(){
         $args = func_get_args();
-        $format = self::$roules[$args[0]]["rule"]["url"];
+        if(count($args) <= 0){
+            throw new \Exception('must be args 1 paratameter.');
+        }
+        $roule = self::getRoule($args[0]);
+        if(!$roule){
+            throw new \Exception('not found roule '.$args[0]);
+        }
+        $format = $roule->getUrl();
         $replacement = array();
         if(isset($args[1])){
             if(is_array($args[1])){
@@ -61,12 +184,12 @@ class Routing{
      */
     static protected function getPreg($key){
         if(isset(self::$roules[$key])){
-            $roule = self::$roules[$key];
+            $roule = self::getRoule($key);
             $replacement = array();
-            foreach($roule["requirements"] as $key => $val){
+            foreach($roule->getRequirements() as $key => $val){
                 $replacement["\{".$key."\}"] = "(".$val.")";
             }
-            return strtr(preg_quote($roule["rule"]["url"],"/"),$replacement);
+            return strtr(preg_quote($roule->getUrl(),"/"),$replacement);
         }
         return null;
     }
@@ -85,9 +208,10 @@ class Routing{
                     }
                 }*/
                 $q = null;
-                if($val["args"]){
+                if($val->getArgs()){
                     $q = array();
-                    foreach($val["args"] as $key => $v){
+                    $args = $val->getArgs();
+                    foreach($args as $key => $v){
                         $q[$key] = $v;
                     }
                     /*foreach($q as $k => $v){
@@ -101,7 +225,7 @@ class Routing{
                         }
                     }*/
                 }
-                $url = $val["rule"]["url"];
+                $url = $val->getUrl();
                 $replacement = array();
                 if(preg_match_all("/\{(.+?)\}/",$url,$mt)){
                     foreach($mt[0] as $k => $v){
@@ -114,7 +238,7 @@ class Routing{
                 }
                 return array(
                     "name" => $key,
-                    "class" => $val["class"],
+                    "class" => $val->getClass(),
                     "param" => $q,
                 );
             }
