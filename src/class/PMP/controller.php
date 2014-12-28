@@ -42,6 +42,7 @@ class Controller{
      *
      */
     protected function rendarParamSet(){
+        $routing = new Routing();
         // set template
         $this->template->assign_vars(array(
             // default set param
@@ -59,6 +60,8 @@ class Controller{
             "GET" => Request::getQuery()->getVars(),
             // session
             "FLASH" => Session::getFlashData(),
+            // routing
+            "ROUTING" => $routing
         ));
         // functions
         $this->template->filter("path",function($name,$val){

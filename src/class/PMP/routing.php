@@ -179,6 +179,14 @@ class Routing
     }
 
     /**
+     * @return mixed
+     */
+    public function getUrl()
+    {
+        return call_user_func_array(array(__CLASS__ , 'generateUrl'),func_get_args());
+    }
+
+    /**
      * @param $key
      * @return null
      */
