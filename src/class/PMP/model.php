@@ -237,7 +237,12 @@ class Model{
     public function toArray(){
         $columns = array();
         foreach($this->getColumns() as $k => $v){
-            $columns[$k] = $this->{$k};
+            $vv = $this->{$k};
+            if($vv instanceof Model){
+                $columns[$k] = $vv->getId();
+            }else{
+                $columns[$k] = $vv;
+            }
         }
         return $columns;
     }
@@ -262,7 +267,8 @@ class Model{
                 $where = array();
                 foreach($args as $k => $v){
                     $key = ":".$k;
-                    $where[] = $this->db->escapeColumn($k)."='".$key."'";
+                    //$where[] = $this->db->escapeColumn($k)."='".$key."'";
+                    $where[] = $k."='".$key."'";
                 }
                 $query = $query->where(implode(" AND ",$where));
             }
@@ -417,12 +423,8 @@ class Model{
             }
             // update
             foreach($delete_foreignkey as $k => $v){
-                try{
-                    if($this->db->dropForeignKey($table_name,$k) && ($this->db->affectedRows() > 0)){
-                        $change_column_num ++;
-                    }
-                }catch (\Exception $e){
-
+                if($this->db->dropForeignKey($table_name,$k) && ($this->db->affectedRows() > 0)){
+                    $change_column_num ++;
                 }
             }
             foreach($delete_columns as $k => $v){

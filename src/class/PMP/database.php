@@ -1530,7 +1530,8 @@ class SQL_Query{
         }else if(is_array($fields)){
             $find = array();
             foreach($fields as $k => $v){
-                $find[] = $this->database->escapeColumn($v);
+                //$find[] = $this->database->escapeColumn($v);
+                $find[] = $v;
             }
             $this->find = implode(",",$find);
         }else{
