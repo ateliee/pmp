@@ -423,8 +423,11 @@ class Model{
             }
             // update
             foreach($delete_foreignkey as $k => $v){
-                if($this->db->dropForeignKey($table_name,$k) && ($this->db->affectedRows() > 0)){
-                    $change_column_num ++;
+                try{
+                    if($this->db->dropForeignKey($table_name,$k) && ($this->db->affectedRows() > 0)){
+                        $change_column_num ++;
+                    }
+                }catch (\Exception $e){
                 }
             }
             foreach($delete_columns as $k => $v){
