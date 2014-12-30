@@ -413,13 +413,7 @@ class Model{
                     $delete_foreignkey[$k] = $k;
                     continue;
                 }
-                if(!isset($columns[$k])){
-                    $delete_indexs[$k] = $k;
-                }else{
-                    if(!$columns[$k]->getKey()){
-                        $delete_indexs[$k] = $k;
-                    }
-                }
+                $delete_indexs[$k] = $k;
             }
             // update
             foreach($delete_foreignkey as $k => $v){

@@ -156,7 +156,9 @@ class DatabaseColumn{
             }else if($k == "comment"){
                 $this->comment = $v;
             }else if($k == "unique"){
-                $this->options[$k] = $v;
+                if($v){
+                    $this->key = 'unique';
+                }
             }else if($k == "ai"){
                 $this->ai = $v;
             }else if($k == "reference"){
