@@ -216,7 +216,7 @@ class Model{
      */
     public function find($args,$first_set=false){
         if($first_set){
-            $results = $this->findQuery($args)->limit(0,1)->getResults();
+            $results = $this->findQuery($args)->getResults();
             if(count($results) > 0){
                 $result = $results[0];
             }
