@@ -205,17 +205,25 @@ class Model{
      * @return $this
      */
     public function setDatabase(Database $db){
-       $this->db =  $db;
-       return $this;
+        $this->db =  $db;
+        return $this;
     }
 
     /**
      * @param $args
+     * @param bool $first_set
      * @return $this|null
      */
-    public function find($args){
-        $result = $this->findQuery($args)->getResult();
-        if($result){
+    public function find($args,$first_set=false){
+        if($first_set){
+            $results = $this->findQuery($args)->limit(0,1)->getResults();
+            if(count($results) > 0){
+                $result = $results[0];
+            }
+        }else{
+            $result = $this->findQuery($args)->getResult();
+        }
+        if(isset($result)){
             $this->setParameters($result);
             return $this;
         }
@@ -448,7 +456,7 @@ class Model{
             foreach($add_columns as $k => $v){
                 $current_key = array_search($k,$columns_keys);
                 if($this->db->alterTableAdd(
-                    $table_name,$k,$v,($current_key > 0 ? $this->db->escapeColumn($columns_keys[$current_key - 1]) : "FIRST"))
+                        $table_name,$k,$v,($current_key > 0 ? $this->db->escapeColumn($columns_keys[$current_key - 1]) : "FIRST"))
                     &&
                     ($this->db->affectedRows() > 0)
                 ){
