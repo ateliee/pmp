@@ -15,6 +15,12 @@ class RoutingRoule
 
     function __construct($url,$class='',$args=null,$requirements=array())
     {
+        if(($args != null) && !is_array($args)){
+            throw new \Exception('args must be array.');
+        }
+        if(($requirements != null) && !is_array($requirements)){
+            throw new \Exception('requirements must be array.');
+        }
         $this->url = $url;
         $this->query = null;
         $this->class = $class;
