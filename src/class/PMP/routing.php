@@ -173,15 +173,18 @@ class Routing
                     $replacement["{".$key."}"] = $val;
                 }
             }else{
-                if(preg_match_all("/\{(.+?)\}/",$format,$mt)){
-                    foreach($mt[0] as $k => $v){
-                        $arg_key = $k + 1;
-                        $replacement[$v] = $args[$arg_key];
-                    }
-                }
+                throw new \Exception('must be args 2 paramater is array.');
             }
         }
-        return strtr($format,$replacement);
+        $query = '';
+        if(isset($args[2])){
+            if(is_array($args[2])){
+                $query = http_build_query($args[2]);
+            }else{
+                throw new \Exception('must be args 3 paramater is array.');
+            }
+        }
+        return strtr($format,$replacement).($query ? '?'.$query : '');
     }
 
     /**
