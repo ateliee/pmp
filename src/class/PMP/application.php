@@ -32,6 +32,7 @@ class Application{
     static public function DebugMode($mode=null){
         if($mode !== null){
             self::$debug_mode = $mode;
+            Debug::enable($mode);
         }
         return self::$debug_mode;
     }
@@ -213,7 +214,6 @@ class Application{
             $benchmark->setMark("action");
             $benchmark->stop();
             //$benchmark->display(false);
-
         }catch (\Exception $e){
             throw new PMPException($e);
         }

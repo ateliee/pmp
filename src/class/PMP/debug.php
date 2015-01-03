@@ -6,6 +6,7 @@ namespace PMP;
  * @package PMP
  */
 class Debug{
+
     /**
      * @param bool $enable
      */
@@ -18,6 +19,7 @@ class Debug{
             error_reporting(-1);
         }
     }
+
     /**
      * @param $html
      */
