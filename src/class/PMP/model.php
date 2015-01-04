@@ -121,7 +121,7 @@ class Model{
             if($v->getFormenable()){
                 $columns[$k] = array(
                     "type" => self::convertColumnsToFormType($v),
-                    "value" => $this->getValue($k),
+                    "value" => $this->getParamater($k),
                     "attr" => self::convertColumnsToFormAttr($v),
                 );
             }
@@ -387,7 +387,7 @@ class Model{
      * @param $key
      * @return mixed
      */
-    public function getValue($key)
+    public function getParamater($key)
     {
         $method = 'get'.ucfirst($key);
         if(method_exists($this,$method)){
