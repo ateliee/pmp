@@ -10,7 +10,8 @@ function autoload_class(){
          * @throws Exception
          */
         function autoloader($nclass) {
-            $class = end(explode('\\',$nclass));
+            $class_list = explode('\\',$nclass);
+            $class = end($class_list);
             $dir = dirname(__FILE__).'/../class/PMP/';
             $filename = $dir.($class).'.php';
             $filename2 = $dir.strtolower($class).'.php';
