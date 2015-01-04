@@ -393,7 +393,7 @@ class Model{
         if(method_exists($this,$method)){
             $get = $this->{$method}();
         }else{
-            $get = $this->{$k};
+            $get = $this->{$key};
         }
         return $get;
     }
