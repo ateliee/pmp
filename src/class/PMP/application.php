@@ -7,6 +7,7 @@ require_once(dirname(__FILE__) . '/server.php');
  */
 class Application{
     static private $root_dir;
+    static private $hostname;
     static private $base_url;
     static private $web_url;
     static private $source_dir;
@@ -60,6 +61,39 @@ class Application{
     static function setBaseUrl($path){
         return self::$base_url = $path;
     }
+
+    /**
+     * @param mixed $hostname
+     */
+    public static function setHostname($hostname)
+    {
+        self::$hostname = $hostname;
+    }
+
+    /**
+     * @return mixed
+     */
+    public static function getHostname()
+    {
+        return self::$hostname;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getHostUrl()
+    {
+        return (self::isSsl() ? 'https' : 'http').'://'.self::$hostname;
+    }
+
+    /**
+     * @return mixed
+     */
+    public static function isSsl()
+    {
+        return (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on');
+    }
+
 
     /**
      * @param $path
@@ -221,16 +255,17 @@ class Application{
 
 }
 
-{
-    $rootdir = dirname(__FILE__).'/../../../../../..';
-    $hostname = isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : '';
-    if(isset($_SERVER['SERVER_PORT']) && !in_array($_SERVER['SERVER_PORT'],array(80,443))){
-        $hostname .= ':'.$_SERVER['SERVER_PORT'];
+    {
+        $rootdir = dirname(__FILE__).'/../../../../../..';
+        $hostname = isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : '';
+        if(isset($_SERVER['SERVER_PORT']) && !in_array($_SERVER['SERVER_PORT'],array(80,443))){
+            $hostname .= ':'.$_SERVER['SERVER_PORT'];
+        }
+        $documentroot = preg_replace('/^'.preg_quote($_SERVER['DOCUMENT_ROOT'],'/').'/','',realpath($rootdir));
+
+        Application::setRootDir($rootdir);
+        Application::setBaseUrl($documentroot);
+        Application::setWebUrl($documentroot.'/web');
+        Application::setHostname(isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '');
+        Application::setHostname(isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '');
     }
-    $documentroot = preg_replace('/^'.preg_quote($_SERVER['DOCUMENT_ROOT'],'/').'/','',realpath($rootdir));
-
-    Application::setRootDir($rootdir);
-    Application::setBaseUrl($documentroot);
-    Application::setWebUrl($documentroot.'/web');
-
-}

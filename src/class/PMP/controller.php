@@ -50,6 +50,8 @@ class Controller{
             "PPATH" => Application::getBaseUrl("/".$this->project),
             "ROOT" => Application::getWebUrl(),
             "PROOT" => Application::getWebUrl("/".$this->project),
+            "HOST" => Application::getHostname(),
+            "URL" => Application::getHostUrl(),
             "PROJECT_NAME" => $this->project,
             "CLASS_NAME" => get_class($this),
             "SELF" => Application::getBaseUrl().Request::getUri(),
