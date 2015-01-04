@@ -5,7 +5,12 @@
  */
 function autoload_class(){
     if(function_exists("spl_autoload_register")){
-        function autoloader($class) {
+        /**
+         * @param $nclass
+         * @throws Exception
+         */
+        function autoloader($nclass) {
+            $class = end(explode('\\',$nclass));
             $dir = dirname(__FILE__).'/../class/PMP/';
             $filename = $dir.($class).'.php';
             $filename2 = $dir.strtolower($class).'.php';
