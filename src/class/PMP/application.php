@@ -81,9 +81,9 @@ class Application{
     /**
      * @return string
      */
-    public static function getHostUrl()
+    public static function getHostUrl($path="")
     {
-        return (self::isSsl() ? 'https' : 'http').'://'.self::$hostname;
+        return (self::isSsl() ? 'https' : 'http').'://'.self::$hostname.$path;
     }
 
     /**
