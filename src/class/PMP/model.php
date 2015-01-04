@@ -119,15 +119,9 @@ class Model{
         $columns = array();
         foreach($this->table_fields as $k => $v){
             if($v->getFormenable()){
-                $method = 'get'.ucfirst($k);
-                if(method_exists($this,$method)){
-                    $get = $this->{$method}();
-                }else{
-                    $get = $this->{$k};
-                }
                 $columns[$k] = array(
                     "type" => self::convertColumnsToFormType($v),
-                    "value" => $get,
+                    "value" => $this->getValue($k),
                     "attr" => self::convertColumnsToFormAttr($v),
                 );
             }
@@ -387,6 +381,21 @@ class Model{
             throw new PMPException('Model->setParameters() args.');
         }
         return $this;
+    }
+
+    /**
+     * @param $key
+     * @return mixed
+     */
+    public function getValue($key)
+    {
+        $method = 'get'.ucfirst($key);
+        if(method_exists($this,$method)){
+            $get = $this->{$method}();
+        }else{
+            $get = $this->{$k};
+        }
+        return $get;
     }
 
     /**
