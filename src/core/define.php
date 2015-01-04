@@ -14,7 +14,7 @@ function autoload_class(){
             $class = end($class_list);
             $dir = dirname(__FILE__).'/../class/PMP/';
             $filename = $dir.($class).'.php';
-            $filename2 = $dir.strtolower($class).'.php';
+            $filename2 = $dir.lcfirst($class).'.php';
             if(file_exists($filename)){
                 include_once( $filename );
             } else if(file_exists($filename2)){
