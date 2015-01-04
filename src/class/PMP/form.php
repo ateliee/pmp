@@ -480,7 +480,8 @@ class Form{
                                 $c = false;
                             }
                         }else if(is_callable($choices)){
-                            if(!isset($choices()[$value])){
+                            $c = $choices();
+                            if(!isset($c[$value])){
                                 $c = false;
                             }
                         }
