@@ -32,7 +32,8 @@ class AuthSession extends AuthManager{
     public function getUser(){
         $auth = Session::get($this->session_name);
         if($auth){
-            return (new Auth())->set($auth['user'],$auth['password']);
+            $a = new Auth();
+            return $a->set($auth['user'],$auth['password']);
         }
         return null;
     }
