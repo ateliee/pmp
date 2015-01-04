@@ -1020,7 +1020,7 @@ class Database{
         // create table
         $columns_list = array();
         foreach($columns as $key => $val){
-            $columns_list[] = $key." ".$this->makeColumnsQuery($val);
+            $columns_list[] = "`".$key."` ".$this->makeColumnsQuery($val);
         }
         $primary_keys = $this->getPrimaryKey($columns);
         $sql = "";
