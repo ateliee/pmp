@@ -7,9 +7,26 @@ namespace PMP;
  */
 class PMPException extends \Exception
 {
+    static $template_filename = false;
     public static $escape = false;
 
     public $exception;
+
+    /**
+     * @param mixed $template_filename
+     */
+    public static function setTemplateFilename($template_filename)
+    {
+        self::$template_filename = $template_filename;
+    }
+
+    /**
+     * @return mixed
+     */
+    public static function getTemplateFilename()
+    {
+        return self::$template_filename;
+    }
 
     function  __construct($message, $code = 0, \Exception $previous = null) {
         //print $this->getMessage();
@@ -42,7 +59,10 @@ class PMPException extends \Exception
         // set template
         $template->assign_vars($param);
         // load template
-        if($template->load(dirname(__FILE__).'/../component/view/Exception.tpl')){
+        if(!self::$template_filename){
+            self::$template_filename = dirname(__FILE__).'/../../component/view/Exception.tpl';
+        }
+        if($template->load(self::$template_filename)){
             $html = $template->get_display_template(true);
         }else{
             throw new PMPException('Sysmtem Error '.__CLASS__.' '.__LINE__);
