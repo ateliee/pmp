@@ -89,7 +89,8 @@ class AuthModel extends Model implements AuthInterface{
         $results = $this->findQuery(array("userid" => $user->getUserID()))->getResults();
         $class_name = get_class($this);
         foreach($results as $result){
-            $u = (new $class_name)->setParameters($result,false);
+            $class = (new $class_name);
+            $u = $class->setParameters($result,false);
             if($u->getUserID() == $user->getUserID() && $u->equalsPassword($user->getPassword())){
                 return $u;
             }
