@@ -263,7 +263,7 @@ class Model{
     public function findQuery($args=array()){
         $select_fields = array();
         foreach($this->getDBColumns() as $k => $v){
-            $select_fields[$k] = $k;
+            $select_fields[$k] = '`'.$k.'`';
         }
         $query = $this->db->createQuery()
             ->select($this->getTableName())->find($select_fields);
