@@ -1066,7 +1066,7 @@ class Template {
     /**
      * @return mixed
      */
-    public function callFilter()
+    static public function callFilter()
     {
         if(func_num_args() > 0){
             $name = func_get_arg(0);
