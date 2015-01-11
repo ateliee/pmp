@@ -348,6 +348,52 @@ class DatabaseColumn{
 }
 
 /**
+ * Class DatabaseDate
+ * @package PMP
+ */
+class DatabaseDate
+{
+    private $time;
+
+    function __construct($time)
+    {
+        if(is_numeric($time)){
+            $this->time = $time;
+        }else if(is_string($time)){
+            $this->time = strtotime($time);
+        }else if($time instanceof DatabaseDate){
+            $this->time = $time->getTimestamp();
+        }else{
+            throw new DatabaseException('not support DatabaseDate class.');
+        }
+    }
+
+    /**
+     * @return int
+     */
+    public function getTimestamp()
+    {
+        return $this->time;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getDate()
+    {
+        return date('Y-m-d',$this->time);
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getDateTime()
+    {
+        return date('Y-m-d H:i:s',$this->time);
+    }
+}
+
+/**
  * Class Database
  * support mysql
  */
@@ -388,6 +434,33 @@ class Database{
         $this->setMode(self::MODE_MYSQLI);
 
         self::setCurrentDB($this);
+    }
+
+    /**
+     * @return null
+     */
+    static public function toDate($time)
+    {
+        $t = new DatabaseDate($time);
+        return $t->getDate();
+    }
+
+    /**
+     * @return null
+     */
+    static public function toDateTime($time)
+    {
+        $t = new DatabaseDate($time);
+        return $t->getDateTime();
+    }
+
+    /**
+     * @return null
+     */
+    static public function toTimestamp($time)
+    {
+        $t = new DatabaseDate($time);
+        return $t->getTimestamp();
     }
 
     /**
