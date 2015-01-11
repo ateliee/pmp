@@ -1630,11 +1630,11 @@ class SQL_Query{
             if($this->where != ""){
                 $sql .= " WHERE (".$this->where.")";
             }
-            if($this->order != ""){
-                $sql .= " ORDER BY ".$this->order."";
-            }
             if($this->group != ""){
                 $sql .= " GROUP BY ".$this->group."";
+            }
+            if($this->order != ""){
+                $sql .= " ORDER BY ".$this->order."";
             }
             if($this->start > 0 || $this->limit){
                 $sql .= " LIMIT ".$this->start.",".$this->limit.";";
