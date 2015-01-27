@@ -19,7 +19,8 @@ class AuthBasic extends AuthManager{
      */
     protected function getUser(){
         if (isset($_SERVER['PHP_AUTH_USER']) and isset($_SERVER['PHP_AUTH_PW'])) {
-            return (new Auth())->set($_SERVER['PHP_AUTH_USER'],$_SERVER['PHP_AUTH_PW']);
+            $auth = new Auth();
+            return $auth->set($_SERVER['PHP_AUTH_USER'],$_SERVER['PHP_AUTH_PW']);
         }
         return null;
     }
