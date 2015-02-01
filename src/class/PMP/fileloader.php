@@ -76,9 +76,9 @@ class FileLoader
     public function loadUrl($url,$headers=array(),$options=array())
     {
         $this->url = $url;
-        $options = array_merge(array_merge($this->options,array(
-            CURLOPT_HTTPHEADER => array_merge($this->headers,$headers),
-        )),$options);
+        $options = $this->options + array(
+                CURLOPT_HTTPHEADER => array_merge($this->headers,$headers),
+            ) + $options;
 
         $ch = curl_init($url);
         foreach($options as $key => $val){
@@ -104,7 +104,7 @@ class FileLoader
     {
         return $this->loadUrl($url,$headers,array(
             CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS =>
+            CURLOPT_POSTFIELDS => http_build_query($post_data)
         ));
     }
 
