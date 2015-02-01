@@ -95,6 +95,23 @@ class FileLoader
     }
 
     /**
+     * @param $filename
+     * @param $url
+     * @param array $headers
+     * @param array $options
+     * @return bool
+     */
+    public function copyFile($filename,$url,$headers=array(),$options=array())
+    {
+        if($data = $this->loadUrl($url,$headers,$options)){
+            if(file_put_contents($filename,$data)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * @param $url
      * @param $post_data
      * @param array $headers
