@@ -1102,8 +1102,9 @@ class Template {
             try{
                 $params[] = $this->convertTemplateVar($val,false);
             }catch (TemplateException $e){
-                $params[] = null;
-                $error = $e;
+                throw $e;
+                //$params[] = null;
+                //$error = $e;
             }
         }
         // if object
