@@ -91,9 +91,11 @@ class ModelColumn{
     static $TYPE_TINYTEXT = 'tinytext';
     static $TYPE_TEXT = 'text';
     static $TYPE_MIDIUMTEXT = 'midiumtext';
-    static $TYPE_LONGTEXt = 'longtext';
+    static $TYPE_LONGTEXT = 'longtext';
     // original
     static $TYPE_URL = 'url';
+    static $TYPE_ARRAY = 'array';
+    static $TYPE_DATA = 'data';
 
     protected $name;
     protected $type;
@@ -173,6 +175,14 @@ class ModelColumn{
     }
 
     /**
+     * @return null
+     */
+    public function getType()
+    {
+        return $this->type;
+    }
+
+    /**
      * @param mixed $type
      */
     protected function setType($type)
@@ -201,8 +211,10 @@ class ModelColumn{
             self::$TYPE_TINYTEXT,
             self::$TYPE_TEXT,
             self::$TYPE_MIDIUMTEXT,
-            self::$TYPE_LONGTEXt,
+            self::$TYPE_LONGTEXT,
             self::$TYPE_URL,
+            self::$TYPE_ARRAY,
+            self::$TYPE_DATA,
         );
         if(in_array($type,$types)){
             $this->type = $type;
@@ -368,6 +380,10 @@ class ModelColumn{
         if($type == self::$TYPE_URL){
             $type = self::$TYPE_VARCHAR;
             $length = 250;
+        }else if($type == self::$TYPE_ARRAY){
+            $type = self::$TYPE_LONGTEXT;
+        }else if($type == self::$TYPE_DATA){
+            $type = self::$TYPE_LONGTEXT;
         }
         $dbcolumn = array(
             'field' => $this->name,

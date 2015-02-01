@@ -6,6 +6,8 @@ namespace PMP;
  * @package PMP
  */
 class Model{
+    static $DB_ARRAY_SPACER = '-';
+
     private $id;
     private $db;
     private $table_options;
@@ -223,7 +225,7 @@ class Model{
             $result = $this->findQuery($args)->getResult();
         }
         if(isset($result)){
-            $this->setParameters($result);
+            $this->setParameters($result,true,true);
             return $this;
         }
         return null;
@@ -247,6 +249,26 @@ class Model{
             $vv = $this->{$k};
             if($vv instanceof Model){
                 $columns[$k] = $vv->getId();
+            }else{
+                $columns[$k] = $vv;
+            }
+        }
+        return $columns;
+    }
+
+    /**
+     * @return array
+     */
+    private function toDBArray(){
+        $columns = array();
+        foreach($this->getColumns() as $k => $v){
+            $vv = $this->{$k};
+            if($vv instanceof Model){
+                $columns[$k] = $vv->getId();
+            }else if($v->getType() == ModelColumn::$TYPE_ARRAY){
+                $columns[$k] = self::$DB_ARRAY_SPACER.implode(self::$DB_ARRAY_SPACER,$vv).self::$DB_ARRAY_SPACER;
+            }else if($v->getType() == ModelColumn::$TYPE_DATA){
+                $columns[$k] = serialize($vv);
             }else{
                 $columns[$k] = $vv;
             }
@@ -286,25 +308,6 @@ class Model{
         return $db;
     }
 
-    /*
-    public function find($args){
-        $results = $this->db->findByOne($this->getTableName(),$this->getColumns(),$args);
-        if($results){
-            $this->setParameters($results);
-            return true;
-        }
-        return false;
-    }
-
-    public function findBy($args,$order=array(),$limit=0,$offset=0){
-        return $this->db
-            ->find($this->getTableName(),$this->getColumns(),$args,$order,$limit,$offset);
-    }
-
-    public function findAll($order=array(),$limit=0,$offset=0){
-        return $this->findBy(array(),$order,$limit,$offset);
-    }*/
-
     /**
      * @param $args
      * @param array $order
@@ -320,7 +323,7 @@ class Model{
             foreach($results as $key => $item){
                 $class_name = get_class($this);
                 $obj = new $class_name();
-                $obj->setParameters($item);
+                $obj->setParameters($item,true,true);
                 $list[$key] = $obj;
             }
         }
@@ -333,7 +336,7 @@ class Model{
     public function flush()
     {
         $result = null;
-        $columns = $this->toArray();
+        $columns = $this->toDBArray();
         if($this->id){
             $result = $this->db->update($this->getTableName(),$columns,$this->getDBColumns(),array("id" => $this->id));
             if($this->db->affectedRows() <= 0){
@@ -353,16 +356,40 @@ class Model{
      * @param $key
      * @param $val
      * @param bool $method_call
+     * @param bool $db_data
      * @return $this
      * @throws PMPException
      */
-    public function setParameter($key,$val,$method_call = true){
+    public function setParameter($key,$val,$method_call = true,$db_data=false){
         if(is_string($key)){
             $method = "set".ucfirst($key);
             if($method_call && method_exists($this,$method)){
                 $this->$method($val);
             }else if(property_exists($this,$key)){
-                $this->{$key} = $val;
+                if($db_data){
+                    if($this->table_fields[$key]->getType() == ModelColumn::$TYPE_ARRAY){
+                        $v = array();
+                        if($val != ''){
+                            $arr = explode(self::$DB_ARRAY_SPACER,$val);
+                            array_shift($arr);
+                            array_pop($arr);
+                            foreach($arr as $vv){
+                                $v[] = $vv;
+                            }
+                        }
+                        $this->{$key} = $v;
+                    }else if($this->table_fields[$key]->getType() == ModelColumn::$TYPE_DATA){
+                        $v = null;
+                        if($val){
+                            $v = unserialize($val);
+                        }
+                        $this->{$key} = $v;
+                    }else{
+                        $this->{$key} = $val;
+                    }
+                }else{
+                    $this->{$key} = $val;
+                }
             }
         }else{
             throw new PMPException('Model->setParameter() args.');
@@ -373,14 +400,15 @@ class Model{
     /**
      * @param $args
      * @param bool $method_call
+     * @param bool $db_data
      * @return $this
      * @throws PMPException
      */
-    public function setParameters($args,$method_call = true)
+    public function setParameters($args,$method_call = true,$db_data=false)
     {
         if(is_array($args)){
             foreach($args as $k => $v){
-                $this->setParameter($k,$v,$method_call);
+                $this->setParameter($k,$v,$method_call,$db_data);
             }
         }else{
             throw new PMPException('Model->setParameters() args.');
