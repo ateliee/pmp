@@ -184,7 +184,7 @@ class Model{
         if($field->getLength() > 0){
             $attr["maxlength"] = $field->getLength();
         }
-        if($field->getType() == 'date'){
+        if(($field->getType() == 'date') || ($field->getType() == 'datetime')){
             if($field->getNull() == false){
                 $attr["required"] = true;
             }
