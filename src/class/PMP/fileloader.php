@@ -1,7 +1,9 @@
 <?php
+namespace PMP;
 
 /**
  * Class FileLoader
+ * @package PMP
  */
 class FileLoader
 {
