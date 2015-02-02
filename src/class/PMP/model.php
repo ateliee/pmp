@@ -198,7 +198,7 @@ class Model{
      * @return string
      */
     public function getTableName(){
-        return strtolower(get_class($this));
+        return get_class($this);
     }
 
     /**
