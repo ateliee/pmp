@@ -855,7 +855,7 @@ class Template {
                 $item = ($p1 != $p2);
                 break;
             case '+':
-                if(is_string($p1)){
+                if(is_string($p1) || is_string($p2)){
                     $item = ($p1.$p2);
                 }else{
                     $item = ($p1 + $p2);
