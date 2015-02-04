@@ -459,6 +459,14 @@ class Template {
     }
 
     /**
+     * @return bool
+     */
+    private function isDebugMode()
+    {
+        return (ini_get('display_errors') ? true : false);
+    }
+
+    /**
      * @param $enable
      * @return mixed
      */
@@ -952,7 +960,7 @@ class Template {
                     if(is_object($result)) {
                         $result = $result->$key;
                     }else if (!array_key_exists($key, $result)) {
-                        $this->error("template : not found [" . $str . "] value;");
+                        $this->notice("not found [" . $str . "] value;");
                         $result = NULL;
                     } else {
                         //$tmp_output[$key] = (is_array($value[$key])) ? array() : true;
@@ -971,7 +979,7 @@ class Template {
                     if (array_key_exists($key,$variables)) {
                         $result = $variables[$key];
                     }else{
-                        $this->error("template : not found value ".$str." in [" . $key . "] value;");
+                        $this->notice("not found value ".$str." in [" . $key . "] value;");
                     }
                     if(isset($variables[$key]) && $set_output){
                         if(!isset($this->outputVars[$key])){
