@@ -960,7 +960,7 @@ class Template {
                     if(is_object($result)) {
                         $result = $result->$key;
                     }else if (!array_key_exists($key, $result)) {
-                        $this->notice("not found [" . $str . "] value;");
+                        $this->error("not found [" . $str . "] value;");
                         $result = NULL;
                     } else {
                         //$tmp_output[$key] = (is_array($value[$key])) ? array() : true;
@@ -979,7 +979,7 @@ class Template {
                     if (array_key_exists($key,$variables)) {
                         $result = $variables[$key];
                     }else{
-                        $this->notice("not found value ".$str." in [" . $key . "] value;");
+                        $this->error("not found value ".$str." in [" . $key . "] value;");
                     }
                     if(isset($variables[$key]) && $set_output){
                         if(!isset($this->outputVars[$key])){
@@ -1110,9 +1110,13 @@ class Template {
             try{
                 $params[] = $this->convertTemplateVar($val,false);
             }catch (TemplateException $e){
-                throw $e;
-                //$params[] = null;
-                //$error = $e;
+                $params[] = null;
+                $error = $e;
+            }
+        }
+        if($node->getName() != 'isset'){
+            if($error){
+                throw $error;
             }
         }
         // if object
