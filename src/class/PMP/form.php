@@ -6,12 +6,54 @@ namespace PMP;
  * @package PMP
  */
 class FormElement{
+    /**
+     * public type
+     */
+    static $TYPE_HIDDEN = 'hidden';
+    static $TYPE_TEXT = 'text';
+    static $TYPE_TEXTAREA = 'textarea';
+    static $TYPE_SELECT = 'select';
+    static $TYPE_CHECKBOX = 'checkbox';
+    static $TYPE_RADIO = 'radio';
+    static $TYPE_EMAIL = 'email';
+
+    static $TYPE_LIST = array(
+        'hidden',
+        'text',
+        'textarea',
+        'select',
+        'checkbox',
+        'radio',
+        'password',
+        'email',
+    );
+
+    static $ATTR_ATTR = 'attr';
+    static $ATTR_FORMAT = 'format';
+    static $ATTR_CHOICES = 'choices';
+    static $ATTR_LABEL = 'label';
+    static $ATTR_MAXLENGTH = 'maxlength';
+    static $ATTR_REQUIRED = 'required';
+
+    static $ATTR_LIST = array(
+        'attr',
+        'format',
+        'choices',
+        'label',
+        'maxlength',
+        'required',
+    );
+
     private $type;
     private $attr;
     private $prex;
     private $value;
 
     function __construct($type,$prex=NULL){
+        $type = strtolower($type);
+        if(!in_array($type,self::$TYPE_LIST)){
+            throw new \Exception(sprintf('Not support Form Type [%s].support is "%s"',$type,implode('" or "',self::$TYPE_LIST)));
+        }
         $this->type = $type;
         $this->attr = array();
         $this->prex = $prex;
@@ -27,19 +69,25 @@ class FormElement{
     }
 
     /**
-     * @param $type
+     * @param mixed $attr
      */
-    public function setType($type)
+    public function setAttr($attr)
     {
-        $this->type = $type;
+        $this->attr = array();
+        foreach($attr as $key => $val){
+            $this->setAttrValue($key,$val);
+        }
     }
 
     /**
      * @param mixed $attr
      */
-    public function setAttr($attr)
+    public function setAttrValue($key,$value)
     {
-        $this->attr = $attr;
+        if(!in_array($key,self::$ATTR_LIST)){
+            throw new \Exception(sprintf('Not support Form Attr [%s].support is "%s"',$key,implode('" or "',self::$ATTR_LIST)));
+        }
+        $this->attr[$key] = $value;
     }
 
     /**
@@ -163,14 +211,15 @@ class Form{
     public function add($name,$type,$attr=array(),$prex=NULL){
         $key = $name;
         if(isset($this->elem[$key])){
-            $this->elem[$key]->setType($type);
-            $this->elem[$key]->setAttr(array_merge($this->elem[$key]->getAttr(),$this->makeAttr($key,$type,$attr)));
+            $elm = new FormElement($type,$prex);
+            $elm->setAttr(array_merge($this->elem[$key]->getAttr(),$this->makeAttr($name,$type,$attr)));
             if($prex !== NULL){
-                $this->elem[$key]->setPrex($prex);
+                $elm->setPrex($prex);
             }
+            $this->addElement($key,$elm);
         }else{
             $elm = new FormElement($type,$prex);
-            $elm->setAttr($this->makeAttr($name,$type,is_array($attr) ? $attr : array()));
+            $elm->setAttr($this->makeAttr($name,$type,$attr));
             $this->addElement($key,$elm);
         }
         return $this;
@@ -183,16 +232,6 @@ class Form{
     public function addElement($key,FormElement $elm)
     {
         $this->elem[$key] = $elm;
-    }
-
-    /**
-     * @param $name
-     * @param $type
-     * @param $attr
-     * @return mixed
-     */
-    protected function makeAttr($name,$type,$attr){
-        return $attr;
     }
 
     /**
@@ -226,17 +265,57 @@ class Form{
     public function createFormModel(Model &$model,$multi_form=false){
         $table_name = $model->getTablename();
 
-        $fields = $model->getFormColumns();
-        foreach($fields as $key => $val){
-            $prex = "";
-            if($multi_form){
-                $prex = $table_name."-";
+        $prex = "";
+        if($multi_form){
+            $prex = $table_name."-";
+        }
+        $fields = $model->getColumns();
+        foreach($fields as $key => $column){
+            $type = $this->convertColumnsToFormType($column);
+            $elm = new FormElement($type,$prex);
+            $elm->setAttr($this->makeAttr($key,$type,array()));
+            $elm->setAttrValue('format',$column->getFormat());
+            $elm->setAttrValue('choices',$column->getChoices());
+            $elm->setAttrValue('label',$column->getComment());
+            if($column->getLength() > 0){
+                $elm->setAttrValue('maxlength',$column->getLength());
             }
-            $this->add($key,$val["type"],$val["attr"],$prex);
-            $this->setValue($key,$val["value"]);
+            if(($column->getType() == ModelColumn::$TYPE_DATE) || ($column->getType() == ModelColumn::$TYPE_DATETIME)){
+                if($column->getNullable() == false){
+                    $elm->setAttrValue('required',true);
+                }
+            }
+            $this->addElement($key,$elm);
+
+            $this->setValue($key,$model->getParamater($key));
         }
         $this->models[$table_name] = $model;
         return $this;
+    }
+
+    /**
+     * @param ModelColumn $column
+     * @return string
+     */
+    private static function convertColumnsToFormType(ModelColumn $column){
+        $field = $column->getDBColumn();
+        $ctype = FormElement::$TYPE_TEXT;
+        if($field->getAi()){
+            $ctype = FormElement::$TYPE_HIDDEN;
+        }else{
+            if($field->isInt()){
+                $ctype = FormElement::$TYPE_SELECT;
+            }else if($field->isFloat()){
+                $ctype = FormElement::$TYPE_TEXT;
+            }else if($field->isDate()){
+                $ctype = FormElement::$TYPE_TEXT;
+            }else if($field->isText()){
+                $ctype = FormElement::$TYPE_TEXTAREA;
+            }else if($field->isString()){
+                $ctype = FormElement::$TYPE_TEXT;
+            }
+        }
+        return $ctype;
     }
 
     /**
@@ -244,6 +323,16 @@ class Form{
      */
     public function getForm(){
         return $this->getString();
+    }
+
+    /**
+     * @param $name
+     * @param $type
+     * @param $attr
+     * @return mixed
+     */
+    protected function makeAttr($name,$type,$attr){
+        return $attr;
     }
 
     /**
@@ -257,15 +346,15 @@ class Form{
             $val = $value->getValue();
             $val = $val ? $val : "";
             $attr = $value->getAttr();
-            $attr["name"] = $value->getPrex().$name;
+            $attr['name'] = $value->getPrex().$name;
 
-            $id = "";
-            if(isset($attr["id"])){
-                $id = $attr["id"];
+            $id = $value->getPrex().$name;
+            if(isset($attr['attr']['id'])){
+                $id = $attr['attr']['id'];
             }
-            $label = $attr["name"];
-            if(isset($attr["label"])){
-                $label = $attr["label"];
+            $label = $attr['name'];
+            if(isset($attr['label'])){
+                $label = $attr['label'];
             }
             $label = new htmlElement('label',array('for' => $id),$this->escape($label));
 
@@ -290,11 +379,10 @@ class Form{
      */
     private function getStringHTML($type,$value,$attr){
         $html = null;
-
         $label = "";
-        if(isset($attr["label"])){
-            $label = $attr["label"];
-            unset($attr["label"]);
+        if(isset($attr['label'])){
+            $label = $attr['label'];
+            unset($attr['label']);
         }
         $type = $this->convertToFormType(strtolower($type));
         switch($type){
@@ -330,8 +418,8 @@ class Form{
                 break;
             case "option":
                 $html = new htmlElement('option',array_merge(
-                    $this->getAttrHTML($attr),
-                    array('type' => $type,'value' => $value)),
+                        $this->getAttrHTML($attr),
+                        array('type' => $type,'value' => $value)),
                     $this->escape($label),false);
                 break;
             case "radio":
@@ -339,8 +427,8 @@ class Form{
                 $html = new htmlElementList();
                 $html->addElement(
                     new htmlElement('input',array_merge(
-                    $this->getAttrHTML($attr),
-                    array('type' => $type)))
+                        $this->getAttrHTML($attr),
+                        array('type' => $type)))
                 );
                 $html->addElement(new htmlEmptyElement($this->escape($label)));
                 break;
@@ -384,12 +472,16 @@ class Form{
         $list = array();
         foreach($attr as $k => $v){
             if(in_array($k,array(
-                "format",
-                "choices"
+                FormElement::$ATTR_FORMAT,
+                FormElement::$ATTR_CHOICES,
+                FormElement::$ATTR_ATTR
             ))){
                 continue;
             }
             $list[$k] = $v;
+        }
+        if(isset($attr['attr'])){
+            $list = array_merge($attr['attr'],$list);
         }
         return $list;
     }

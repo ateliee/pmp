@@ -224,6 +224,14 @@ class ModelColumn{
     }
 
     /**
+     * @return int
+     */
+    public function getLength()
+    {
+        return $this->length;
+    }
+
+    /**
      * @param int $length
      */
     protected function setLength($length)
@@ -233,6 +241,14 @@ class ModelColumn{
         }else{
             throw new \Exception('not support ModelColumn length value');
         }
+    }
+
+    /**
+     * @return boolean
+     */
+    public function getNullable()
+    {
+        return $this->nullable;
     }
 
     /**
@@ -249,6 +265,14 @@ class ModelColumn{
     protected function setUnique($unique)
     {
         $this->unique = (bool)$unique;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getComment()
+    {
+        return $this->comment;
     }
 
     /**
@@ -273,6 +297,14 @@ class ModelColumn{
     public function getFormenable()
     {
         return $this->formenable;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getAi()
+    {
+        return $this->ai;
     }
 
     /**

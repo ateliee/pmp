@@ -68,35 +68,6 @@ class Model{
     }
 
     /**
-     * @param $name
-     * @param $field
-     * @return array
-     */
-    /*
-    private static function makeColumnToDBColumnData($name,$field){
-        return array(
-            "Column" => $name,
-            "Type" => (isset($field["type"]) ? $field["type"] : "").(isset($field["length"]) ? "(".$field["length"].")" : "").(isset($field["attribute"]) ? " ".$field["attribute"] : ""),
-            "Null" => (isset($field["null"]) && ($field["null"] == false) ? "NO" : "YES"),
-            "Default" => (isset($field["default"]) ? $field["default"] : false),
-            "Collation" => (isset($field["collation"]) ? $field["collation"] : false),
-            "Key" => (
-                (isset($field["index"]) && $field["index"]) ? "index" :
-                (isset($field["unique"]) && $field["unique"]) ? "unique" :
-                (isset($field["fulltext"]) && $field["fulltext"]) ? "fulltext" :
-                (isset($field["primary"]) && $field["primary"]) ? "primary" :
-                (isset($field["ai"]) && $field["ai"]) ? "primary" :
-                false
-            ),
-            "Extra" => ((isset($field["ai"]) && $field["ai"]) ? "auto_increment" : false),
-            "Comment" => (isset($field["comment"]) ? $field["comment"] : false),
-            "Format" => (isset($field["format"]) ? $field["format"] : null),
-            "Choices" => (isset($field["choices"]) ? $field["choices"] : null),
-            "Form" => (isset($field["form"]) ? $field["form"] : true),
-        );
-    }*/
-
-    /**
      * @return array
      */
     public function getColumns(){
@@ -117,6 +88,7 @@ class Model{
     /**
      * @return array
      */
+    /*
     public function getFormColumns(){
         $columns = array();
         foreach($this->table_fields as $k => $v){
@@ -129,7 +101,7 @@ class Model{
             }
         }
         return $columns;
-    }
+    }*/
 
     /**
      * @param $key
@@ -145,53 +117,6 @@ class Model{
      */
     public function get($key){
         return $this->table_fields[$key];
-    }
-
-    /**
-     * @param ModelColumn $column
-     * @return string
-     */
-    private static function convertColumnsToFormType(ModelColumn $column){
-        $field = $column->getDBColumn();
-        $ctype = "text";
-        if($field->getAi()){
-            $ctype = "hidden";
-        }else{
-            if($field->isInt()){
-                $ctype = "select";
-            }else if($field->isFloat()){
-                $ctype = "text";
-            }else if($field->isDate()){
-                $ctype = "text";
-            }else if($field->isText()){
-                $ctype = "textarea";
-            }else if($field->isString()){
-                $ctype = "text";
-            }
-        }
-        return $ctype;
-    }
-
-    /**
-     * @param ModelColumn $column
-     * @return array
-     */
-    private static function convertColumnsToFormAttr(ModelColumn $column)
-    {
-        $field = $column->getDBColumn();
-        $attr = array();
-        $attr["format"] = $column->getFormat();
-        $attr["choices"] = $column->getChoices();
-        $attr["label"] = $field->getComment();
-        if($field->getLength() > 0){
-            $attr["maxlength"] = $field->getLength();
-        }
-        if(($field->getType() == 'date') || ($field->getType() == 'datetime')){
-            if($field->getNull() == false){
-                $attr["required"] = true;
-            }
-        }
-        return $attr;
     }
 
     /**
