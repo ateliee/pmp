@@ -57,7 +57,7 @@ class Model{
      * @return array
      */
     public function idColumn(){
-        return new ModelColumn(array("type" => "bigint","ai" => true,"null" => false,"comment" => __("primary key")));
+        return new ModelColumn(array("type" => ModelColumn::$TYPE_BIGINT,"ai" => true,"null" => false,"comment" => __("primary key")));
     }
 
     /**

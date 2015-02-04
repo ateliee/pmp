@@ -16,6 +16,15 @@ class FormElement{
     static $TYPE_CHECKBOX = 'checkbox';
     static $TYPE_RADIO = 'radio';
     static $TYPE_EMAIL = 'email';
+    static $TYPE_URL = 'url';
+    static $TYPE_DATE = 'date';
+    static $TYPE_DATETIME = 'datetime';
+    static $TYPE_TIME = 'time';
+    static $TYPE_PASSWORD = 'password';
+    /**
+     * private type
+     */
+    static $TYPE_OPTION = 'option';
 
     static $TYPE_LIST = array(
         'hidden',
@@ -26,15 +35,25 @@ class FormElement{
         'radio',
         'password',
         'email',
+        'url',
+        'date',
+        'datetime',
+        'time',
+        'password',
     );
-
+    /**
+     * public attr
+     */
     static $ATTR_ATTR = 'attr';
     static $ATTR_FORMAT = 'format';
     static $ATTR_CHOICES = 'choices';
     static $ATTR_LABEL = 'label';
     static $ATTR_MAXLENGTH = 'maxlength';
     static $ATTR_REQUIRED = 'required';
-
+    /**
+     * private attr
+     */
+    static $ATTR_NAME = 'name';
     static $ATTR_LIST = array(
         'attr',
         'format',
@@ -48,6 +67,7 @@ class FormElement{
     private $attr;
     private $prex;
     private $value;
+    private $isArray;
 
     function __construct($type,$prex=NULL){
         $type = strtolower($type);
@@ -58,6 +78,7 @@ class FormElement{
         $this->attr = array();
         $this->prex = $prex;
         $this->value = null;
+        $this->isArray = false;
     }
 
     /**
@@ -141,6 +162,22 @@ class FormElement{
     public function getValue()
     {
         return $this->value;
+    }
+
+    /**
+     * @param boolean $isArray
+     */
+    public function setIsArray($isArray)
+    {
+        $this->isArray = $isArray;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function getIsArray()
+    {
+        return $this->isArray;
     }
 
 }
@@ -273,16 +310,17 @@ class Form{
         foreach($fields as $key => $column){
             $type = $this->convertColumnsToFormType($column);
             $elm = new FormElement($type,$prex);
+            $elm->setIsArray(($column->getType() == ModelColumn::$TYPE_ARRAY) && ($column->getChoices() > 0));
             $elm->setAttr($this->makeAttr($key,$type,array()));
-            $elm->setAttrValue('format',$column->getFormat());
-            $elm->setAttrValue('choices',$column->getChoices());
-            $elm->setAttrValue('label',$column->getComment());
+            $elm->setAttrValue(FormElement::$ATTR_FORMAT,$column->getFormat());
+            $elm->setAttrValue(FormElement::$ATTR_CHOICES,$column->getChoices());
+            $elm->setAttrValue(FormElement::$ATTR_LABEL,$column->getComment());
             if($column->getLength() > 0){
-                $elm->setAttrValue('maxlength',$column->getLength());
+                $elm->setAttrValue(FormElement::$ATTR_MAXLENGTH,$column->getLength());
             }
             if(($column->getType() == ModelColumn::$TYPE_DATE) || ($column->getType() == ModelColumn::$TYPE_DATETIME)){
                 if($column->getNullable() == false){
-                    $elm->setAttrValue('required',true);
+                    $elm->setAttrValue(FormElement::$ATTR_REQUIRED,true);
                 }
             }
             $this->addElement($key,$elm);
@@ -303,7 +341,13 @@ class Form{
         if($field->getAi()){
             $ctype = FormElement::$TYPE_HIDDEN;
         }else{
-            if($field->isInt()){
+            if($column->getType() == ModelColumn::$TYPE_ARRAY){
+                if(count($column->getChoices()) > 0){
+                    $ctype = FormElement::$TYPE_CHECKBOX;
+                }else{
+                    $ctype = FormElement::$TYPE_TEXTAREA;
+                }
+            }else if($field->isInt()){
                 $ctype = FormElement::$TYPE_SELECT;
             }else if($field->isFloat()){
                 $ctype = FormElement::$TYPE_TEXT;
@@ -346,15 +390,15 @@ class Form{
             $val = $value->getValue();
             $val = $val ? $val : "";
             $attr = $value->getAttr();
-            $attr['name'] = $value->getPrex().$name;
+            $attr[FormElement::$ATTR_NAME] = $value->getPrex().$name;
 
             $id = $value->getPrex().$name;
-            if(isset($attr['attr']['id'])){
-                $id = $attr['attr']['id'];
+            if(isset($attr[FormElement::$ATTR_ATTR]['id'])){
+                $id = $attr[FormElement::$ATTR_ATTR]['id'];
             }
-            $label = $attr['name'];
-            if(isset($attr['label'])){
-                $label = $attr['label'];
+            $label = $attr[FormElement::$ATTR_NAME];
+            if(isset($attr[FormElement::$ATTR_LABEL])){
+                $label = $attr[FormElement::$ATTR_LABEL];
             }
             $label = new htmlElement('label',array('for' => $id),$this->escape($label));
 
@@ -380,16 +424,16 @@ class Form{
     private function getStringHTML($type,$value,$attr){
         $html = null;
         $label = "";
-        if(isset($attr['label'])){
-            $label = $attr['label'];
-            unset($attr['label']);
+        if(isset($attr[FormElement::$ATTR_LABEL])){
+            $label = $attr[FormElement::$ATTR_LABEL];
+            unset($attr[FormElement::$ATTR_LABEL]);
         }
         $type = $this->convertToFormType(strtolower($type));
         switch($type){
-            case "select":
+            case FormElement::$TYPE_SELECT:
                 $options = array();
-                if(isset($attr["choices"])){
-                    $options = $attr["choices"];
+                if(isset($attr[FormElement::$ATTR_CHOICES])){
+                    $options = $attr[FormElement::$ATTR_CHOICES];
                 }
 
                 $list = array();
@@ -412,36 +456,49 @@ class Form{
                         $opt["selected"] = "selected";
                     }
                     $opt["label"] = $v;
-                    $inner_html .= $this->getStringHTML("option",$k,$opt);
+                    $inner_html .= $this->getStringHTML('option',$k,$opt);
                 }
                 $html = new htmlElement('select',$this->getAttrHTML($attr),$inner_html,false);
                 break;
-            case "option":
+            case FormElement::$TYPE_OPTION:
                 $html = new htmlElement('option',array_merge(
                         $this->getAttrHTML($attr),
                         array('type' => $type,'value' => $value)),
                     $this->escape($label),false);
                 break;
-            case "radio":
-            case "checkbox":
+            case FormElement::$TYPE_RADIO:
+            case FormElement::$TYPE_CHECKBOX:
                 $html = new htmlElementList();
-                $html->addElement(
-                    new htmlElement('input',array_merge(
-                        $this->getAttrHTML($attr),
-                        array('type' => $type)))
-                );
-                $html->addElement(new htmlEmptyElement($this->escape($label)));
+                if(count($attr[FormElement::$ATTR_CHOICES]) > 0){
+                    foreach($attr[FormElement::$ATTR_CHOICES] as $key => $v){
+                        $id = $attr[FormElement::$ATTR_ATTR]['id'].'-'.$key;
+                        $name = $attr[FormElement::$ATTR_ATTR]['id'].'[]';
+                        $html->addElement(
+                            new htmlElement('input',array_merge(
+                                $this->getAttrHTML($attr),
+                                array('type' => $type,'id' => $id,'name' => $name)))
+                        );
+                        $html->addElement(new htmlElement('label',array('for' => $id),$this->escape($v)));
+                    }
+                }else{
+                    $html->addElement(
+                        new htmlElement('input',array_merge(
+                            $this->getAttrHTML($attr),
+                            array('type' => $type)))
+                    );
+                    $html->addElement(new htmlEmptyElement($this->escape($label)));
+                }
                 break;
-            case "textarea":
+            case FormElement::$TYPE_TEXTAREA:
                 $html = new htmlElement('textarea',$this->getAttrHTML($attr),$value,false);
                 break;
-            case "password":
+            case FormElement::$TYPE_PASSWORD:
                 $html = new htmlElement('input',array_merge(
                     $this->getAttrHTML($attr),
                     array('type' => $type)));
                 break;
-            case "text":
-            case "email":
+            case FormElement::$TYPE_TEXT:
+            case FormElement::$TYPE_EMAIL:
             default:
                 $html = new htmlElement('input',array_merge(
                     $this->getAttrHTML($attr),
@@ -458,7 +515,7 @@ class Form{
      * @return mixed
      */
     private function convertToFormType($type){
-        if($type == "time"){
+        if($type == FormElement::$TYPE_TIME){
             return "input";
         }
         return $type;
@@ -519,85 +576,105 @@ class Form{
             $check_all = true;
             foreach($this->elem as $key => $val){
                 $error = new FormError();
-                $label = $val->getAttrValue('label',$key);
+                $label = $val->getAttrValue(FormElement::$ATTR_LABEL,$key);
                 $form_key = $val->getPrex().$key;
-                $value = $request->get($form_key,"");
-                if($val->getAttrValue('required',false) === true){
-                    if(!(($request->is($form_key)) && ($value != ""))){
-                        $error->add('required',$this->getErrorMessage('required',$label));
+
+                $valuelist = array();
+                if($val->getIsArray()){
+                    $valuelist = $request->get($form_key,array());
+                    if(!is_array($valuelist)){
+                        $error->add('array',$this->getErrorMessage('array',$label));
                     }
+                }else{
+                    $valuelist[] = $request->get($form_key,"");
                 }
-                if($value != ""){
-                    if(($error->count() <= 0) && $val->getAttrValue("format")){
-                        if(!preg_match("/^".$val->getAttrValue("format")."$/",$value)){
-                            $error->add('format',$this->getErrorMessage('format',$label));
+                foreach($valuelist as $value){
+                    if($val->getAttrValue(FormElement::$ATTR_REQUIRED,false) === true){
+                        if(!(($request->is($form_key)) && ($value != ""))){
+                            $error->add('required',$this->getErrorMessage('required',$label));
                         }
                     }
-                }
-                if(($request->is($form_key)) && ($value != "")){
-                    if($val->getType() == "email"){
-                        if(!$this->checkMail($value)){
-                            $error->add('email',$this->getErrorMessage('email',$label));
-                        }
-                    }else if($val->getType() == "url"){
-                        if(!$this->checkURL($value)){
-                            $error->add('url',$this->getErrorMessage('url',$label));
-                        }
-                    }else if($val->getType() == "date"){
-                        if(!$this->checkDateString($value)){
-                            $error->add('date',$this->getErrorMessage('date',$label));
-                        }
-                    }else if($val->getType() == "datetime"){
-                        if(!$this->checkDateTimeString($value)){
-                            $error->add('datetime',$this->getErrorMessage('datetime',$label));
-                        }
-                    }else if($val->getType() == "time"){
-                        if(!$this->checkTimeString($value)){
-                            $error->add('time',$this->getErrorMessage('time',$label));
-                        }
-                    }else if($val->getType() == "password"){
-                        if(!preg_match("/^([0-9a-zA-Z]*)$/",$value)){
-                            $error->add('password',$this->getErrorMessage('password',$label));
-                        }
-                    }
-                    if(($error->count() <= 0) && $val->getAttrValue("choices")){
-                        $choices = $val->getAttrValue("choices");
-                        $c = true;
-                        if(!$value){
-                            $c = false;
-                        }else if(is_array($choices) && !isset($choices[$value])){
-                            $c = false;
-                        }else if(is_object($choices) && ($choices instanceof Model)){
-                            if(!$choices->findQuery(intval($value))->getResults()){
-                                $c = false;
-                            }
-                        }else if(is_callable($choices)){
-                            $c = $choices();
-                            if(!isset($c[$value])){
-                                $c = false;
+                    if($value != ""){
+                        if(($error->count() <= 0) && $val->getAttrValue(FormElement::$ATTR_FORMAT)){
+                            if(!preg_match("/^".$val->getAttrValue(FormElement::$ATTR_FORMAT)."$/",$value)){
+                                $error->add('format',$this->getErrorMessage('format',$label));
                             }
                         }
-                        if(!$c){
-                            $error->add('choices',$this->getErrorMessage('choices',$label));
-                        }
                     }
-                }
-                if($error->count() <= 0){
-                    foreach($this->models as $k => $v){
-                        if($v->isExists($key)){
-                            if($v->get($key)->getDBColumn()->isUnique()){
-                                $count = count($v->findBy(array($key => intval($value))));
-                                if($count > 0){
-                                    $error->add('unique',$this->getErrorMessage('unique',$label));
+                    if(($request->is($form_key)) && ($value != "")){
+                        if($val->getType() == FormElement::$TYPE_EMAIL){
+                            if(!$this->checkMail($value)){
+                                $error->add('email',$this->getErrorMessage('email',$label));
+                            }
+                        }else if($val->getType() == FormElement::$TYPE_URL){
+                            if(!$this->checkURL($value)){
+                                $error->add('url',$this->getErrorMessage('url',$label));
+                            }
+                        }else if($val->getType() == FormElement::$TYPE_DATE){
+                            if(!$this->checkDateString($value)){
+                                $error->add('date',$this->getErrorMessage('date',$label));
+                            }
+                        }else if($val->getType() == FormElement::$TYPE_DATETIME){
+                            if(!$this->checkDateTimeString($value)){
+                                $error->add('datetime',$this->getErrorMessage('datetime',$label));
+                            }
+                        }else if($val->getType() == FormElement::$TYPE_TIME){
+                            if(!$this->checkTimeString($value)){
+                                $error->add('time',$this->getErrorMessage('time',$label));
+                            }
+                        }else if($val->getType() == FormElement::$TYPE_PASSWORD){
+                            if(!preg_match("/^([0-9a-zA-Z]*)$/",$value)){
+                                $error->add('password',$this->getErrorMessage('password',$label));
+                            }
+                        }
+                        if(($error->count() <= 0) && $val->getAttrValue(FormElement::$ATTR_CHOICES)){
+                            $choices = $val->getAttrValue(FormElement::$ATTR_CHOICES);
+                            $c = true;
+                            if(!$value){
+                                $c = false;
+                            }else if(is_array($choices) && !isset($choices[$value])){
+                                $c = false;
+                            }else if(is_object($choices) && ($choices instanceof Model)){
+                                if(!$choices->findQuery(intval($value))->getResults()){
+                                    $c = false;
+                                }
+                            }else if(is_callable($choices)){
+                                $c = $choices();
+                                if(!isset($c[$value])){
+                                    $c = false;
                                 }
                             }
-                            $v->setParameter($key,$value);
+                            if(!$c){
+                                $error->add('choices',$this->getErrorMessage('choices',$label));
+                            }
                         }
                     }
+                    if($error->count() <= 0){
+                        foreach($this->models as $k => $v){
+                            if($v->isExists($key)){
+                                if($v->get($key)->getDBColumn()->isUnique()){
+                                    $count = count($v->findBy(array($key => intval($value))));
+                                    if($count > 0){
+                                        $error->add('unique',$this->getErrorMessage('unique',$label));
+                                    }
+                                }
+                                if(!$val->getIsArray()){
+                                    $v->setParameter($key,$value);
+                                }
+                            }
+                        }
+                    }
+                    if($error->count() > 0){
+                        $this->errors[$key] = $error;
+                        $check_all = false;
+                    }
                 }
-                if($error->count() > 0){
-                    $this->errors[$key] = $error;
-                    $check_all = false;
+                if($val->getIsArray()){
+                    foreach($this->models as $k => $v){
+                        if($v->isExists($key)){
+                            $v->setParameter($key,$valuelist);
+                        }
+                    }
                 }
             }
             return $check_all;
