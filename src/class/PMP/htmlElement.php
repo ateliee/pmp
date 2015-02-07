@@ -32,7 +32,7 @@ class htmlElement{
      * @param array $attr
      * @param null $inner_html
      */
-    function __construct($tag_name,$attr=array(),$inner_html=null,$empty_tag=true){
+    public function __construct($tag_name,$attr=array(),$inner_html=null,$empty_tag=true){
         $this->tag_name = $tag_name;
         $this->attr = $attr;
         $this->inner_html = $inner_html;
@@ -73,15 +73,23 @@ class htmlElement{
      * @param $key
      * @param $val
      */
-    function addAttr($key,$val){
+    public function addAttr($key,$val){
         $this->attr[$key] = $val;
     }
 
     /**
      * @param $key
      */
-    function removeAttr($key){
+    public function removeAttr($key){
         unset($this->attr[$key]);
+    }
+
+    /**
+     * @param $str
+     * @return string
+     */
+    static function escape($str){
+        return htmlspecialchars($str, ENT_QUOTES, mb_internal_encoding());
     }
 }
 

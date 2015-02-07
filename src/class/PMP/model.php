@@ -240,8 +240,9 @@ class Model{
      * @param int $offset
      * @return array|null
      */
-    public function findByModel($args,$order=array(),$limit=0,$offset=0){
-        $results = $this->findBy($args,$order,$limit,$offset);
+    /*
+    public function findBy($args,$order=array(),$limit=0,$offset=0){
+        $results = $this->db->findBy($args,$order,$limit,$offset);
         $list = null;
         if($results){
             $list = array();
@@ -253,7 +254,7 @@ class Model{
             }
         }
         return $list;
-    }
+    }*/
 
     /**
      * @return null

@@ -423,6 +423,40 @@ class TemplateBlock{
     }
 }
 
+class TemplateFunction
+{
+    private $func;
+    private $set_template;
+
+    function __construct($func,$set_template = false)
+    {
+        $this->func = $func;
+        $this->set_template = $set_template;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getFunc()
+    {
+        return $this->func;
+    }
+
+    /**
+     * @param $params
+     * @param $template
+     * @return mixed
+     */
+    public function callFunc($params,$template)
+    {
+        $p = $params;
+        if($this->set_template){
+            array_unshift($p,$template);
+        }
+        return call_user_func_array($this->func,$p);
+    }
+}
+
 /**
  * Class Template
  */
@@ -731,10 +765,11 @@ class Template {
     /**
      * @param $id
      * @param $val
+     * @param bool $set_template
      */
-    static public function filter($id, $val)
+    static public function filter($id, $val, $set_template=false)
     {
-        self::$Functions[$id] = $val;
+        self::$Functions[$id] = new TemplateFunction($val,$set_template);
     }
 
     /**
@@ -789,7 +824,7 @@ class Template {
                         $result = $this->convertTemplateVar($node->getParam($param_num),false);
                         $param_num ++;
                     }else{
-                        throw new TemplateException();
+                        $this->error('not var Params count');
                     }
                 }else{
                     $result = $this->convertNodeToVar($node,$this->Vars,true);
@@ -802,7 +837,7 @@ class Template {
                             $p2 = $this->convertTemplateVar($node->getParam($param_num+1),false);
                             $result = $this->convertToCalculation($result,$c->getName(),$p2);
                         }else{
-                            throw new TemplateException('not support var');
+                            $this->error('not support var');
                         }
                     }
                 }
@@ -817,11 +852,11 @@ class Template {
                         $p2 = $this->convertTemplateVar($node,false);
                         $result = $this->convertToCalculation(0,$c->getName(),$p2);
                     }else{
-                        throw new TemplateException('not support calculation');
+                        $this->error('not support calculation');
                     }
                 }
             }else{
-                throw new TemplateException('not found Parser');
+                $this->error('not found Parser');
             }
             if(!$loop){
                 break;
@@ -958,8 +993,17 @@ class Template {
                 $key = $m[1];
                 if (isset($result)) {
                     if(is_object($result)) {
-                        $result = $result->$key;
-                    }else if (!array_key_exists($key, $result)) {
+                        if($class_name = get_class($result)){
+                            $get_key = 'get'.$key;
+                            if(is_callable(array($result,$key))){
+                                $result = $result->$key();
+                            }else{
+                                $result = $result->$key;
+                            }
+                        }else{
+                            $result = $result->$key;
+                        }
+                    } else if (!array_key_exists($key, $result)) {
                         $this->error("not found [" . $str . "] value;");
                         $result = NULL;
                     } else {
@@ -1082,9 +1126,9 @@ class Template {
             for($i=1;$i<func_num_args();$i++){
                 $params[] = func_get_arg($i);
             }
-            if ( is_callable( self::$Functions[$name] ) ) {
+            if ( is_callable( self::$Functions[$name]->getFunc() ) ) {
                 try{
-                    $result = call_user_func_array(self::$Functions[$name],$params);
+                    $result = self::$Functions[$name]->callFunc($params,null);
                 }catch (TemplateException $e){
                     new TemplateException('Template : Error Functions '.$name.'('.implode(",",$params).')');
                 }
@@ -1139,9 +1183,9 @@ class Template {
             if($error){
                 throw $error;
             }
-            if ( is_callable( self::$Functions[$node->getName()] ) ) {
+            if ( is_callable( self::$Functions[$node->getName()]->getFunc() ) ) {
                 try{
-                    $result = call_user_func_array(self::$Functions[$node->getName()],$params);
+                    $result = self::$Functions[$node->getName()]->callFunc($params,$this);
                 }catch (TemplateException $e){
                     $this->error('Error Functions '.$node->getName().'('.implode(",",$node->getParams()).')');
                 }

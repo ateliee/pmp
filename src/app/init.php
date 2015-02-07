@@ -40,9 +40,62 @@ Localize::bindTextDomain('application',dirname(__FILE__).'/languages');
 /**
  * init framework file
  */
-PMP\Template::filter("html_element",function(htmlElement $element,$param=array()){
+PMP\Template::filter('html_element',function(htmlElement $element,$param=array()){
     foreach($param as $key => $val){
         $element->addAttr($key,$val);
     }
     return $element;
+});
+/**
+ * form template function
+ */
+\PMP\Template::filter('form_label',function($form,$attr=array()){
+    if(!($form instanceof \PMP\FormElement)){
+        throw new \PMP\PMPException('form_label() paramater is not instanceof Form.');
+    }
+    $label = new htmlElement('label',
+        array_merge($attr,array('for' => $form->getFormId())),htmlElement::escape($form->getFormLabel()));
+    return $label;
+});
+\PMP\Template::filter('form_wedget',function(\PMP\Template $template,$form,$attr=array()){
+    if(!($form instanceof \PMP\FormElement)){
+        throw new \PMP\PMPException('form_label() paramater is not instanceof Form.');
+    }
+    $form->setOutput(true);
+    return $form->getTag($attr);
+},true);
+\PMP\Template::filter('form_rest',function($form){
+    $output = '';
+    foreach($form as $key => $val){
+        if(!($val instanceof \PMP\FormElement)){
+            continue;
+        }
+        if(!$val->getOutput()){
+            $output .= $val->getTag();
+        }
+    }
+    return $output;
+});
+
+\PMP\Template::filter('form_errors',function($form){
+    $errors = array();
+    if(is_array($form)){
+        foreach($form as $key => $val){
+            $errors[] = \PMP\Template::callFilter('form_error',$val);
+        }
+    }else{
+        throw new \PMP\PMPException('form_errors() paramater is not array or FormElement.');
+    }
+    return implode('',$errors);
+});
+\PMP\Template::filter('form_error',function($form){
+    $errors = null;
+    if($form instanceof \PMP\FormElement){
+        if($error = $form->getError()){
+            $errors = $error;
+        }
+    }else{
+        throw new \PMP\PMPException('form_errors() paramater is not array or FormElement.');
+    }
+    return $errors;
 });

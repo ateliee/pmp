@@ -102,7 +102,6 @@ class DatabaseColumn{
     private $type;
     private $length;
     private $default;
-    private $collation;
     private $attribute;
     private $null;
     private $key;
@@ -144,8 +143,8 @@ class DatabaseColumn{
             }else if($k == "default"){
                 $this->default = $v;
             }else if($k == "collation"){
-                if($v != ""){
-                    $this->collation = $v;
+                if($v == "unique"){
+                    $this->key = 'unique';
                 }
             }else if($k == "key"){
                 $this->key = strtolower($v);
@@ -247,12 +246,6 @@ class DatabaseColumn{
     /**
      * @return mixed
      */
-    public function getCollation(){
-        return $this->collation;
-    }
-    /**
-     * @return mixed
-     */
     public function getAi(){
         return $this->ai;
     }
@@ -331,7 +324,7 @@ class DatabaseColumn{
      * @return bool
      */
     public function isUnique(){
-        return ($this->collation == "unique") ? true : false;
+        return ($this->key == "unique") ? true : false;
     }
 
     /**
@@ -552,7 +545,7 @@ class Database{
     }
 
     /**
-     * @return mixed
+     * @return Database
      */
     static public function getCurrentDB(){
         return self::$currentDB;
@@ -692,7 +685,7 @@ class Database{
     /**
      * @return int
      */
-    private function numRows()
+    public function numRows()
     {
         if ($this->mode == self::MODE_MYSQL) {
             return mysql_num_rows($this->result);
