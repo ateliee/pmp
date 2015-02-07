@@ -4,6 +4,8 @@ namespace PMP;
 /**
  * Class FormError
  * @package PMP
+ *
+ * TODO: 自動コンバート・int,floatチェック
  */
 class FormError
 {

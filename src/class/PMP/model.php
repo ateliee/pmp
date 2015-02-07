@@ -286,13 +286,15 @@ class Model{
      * @return $this
      * @throws PMPException
      */
-    public function setParameter($key,$val,$method_call = true,$db_data=false){
+    public function setParameter($key,$val,$method_call = true,$db_data=false)
+    {
         if(is_string($key)){
             $method = "set".ucfirst($key);
             if($method_call && method_exists($this,$method)){
                 $this->$method($val);
             }else if(property_exists($this,$key)){
                 if($db_data){
+                    $val = $this->table_fields[$key]->getConvertValue($val);
                     if($this->table_fields[$key]->getType() == ModelColumn::$TYPE_ARRAY){
                         $v = array();
                         if($val != ''){

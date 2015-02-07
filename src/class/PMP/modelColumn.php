@@ -97,6 +97,12 @@ class ModelColumn{
     static $TYPE_ARRAY = 'array';
     static $TYPE_DATA = 'data';
 
+    // convert
+    static $CONVERT_NUMBER = 1;
+    static $CONVERT_JP = 2;
+    static $CONVERT_KANA = 4;
+    static $CONVERT_ALPHABET = 8;
+
     protected $name;
     protected $type;
     protected $length;
@@ -111,6 +117,7 @@ class ModelColumn{
 
     protected $reference;
     protected $connection;
+    protected $convert;
 
     /**
      * @param $field
@@ -144,6 +151,8 @@ class ModelColumn{
                 $this->setDefault($v);
             }else if($k == 'format'){
                 $this->setFormat($v);
+            }else if($k == 'convert'){
+                $this->setConvert($v);
             }else if($k == 'choices'){
                 $this->setChoices($v);
             }else if($k == 'connection'){
@@ -337,6 +346,49 @@ class ModelColumn{
     public function getFormat()
     {
         return $this->format;
+    }
+
+    /**
+     * @param mixed $convert
+     */
+    public function setConvert($convert)
+    {
+        $this->convert = $convert;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getConvert()
+    {
+        return $this->convert;
+    }
+
+    /**
+     * @param $v
+     * @return array|string
+     */
+    public function getConvertValue($v)
+    {
+        if(is_array($v)){
+            foreach($v as $kk => $vv){
+                $v[$kk] = $this->getConvertValue($vv);
+            }
+        }else{
+            if($this->convert | self::$CONVERT_NUMBER){
+                $v = mb_convert_kana($v, 'sn');
+            }
+            if($this->convert | self::$CONVERT_JP){
+                $v = mb_convert_kana($v, 'Hc');
+            }
+            if($this->convert | self::$CONVERT_KANA){
+                $v = mb_convert_kana($v, 'KCV');
+            }
+            if($this->convert | self::$CONVERT_ALPHABET){
+                $v = mb_convert_kana($v, 'sa');
+            }
+        }
+        return $v;
     }
 
     /**
