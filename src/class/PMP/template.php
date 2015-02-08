@@ -603,7 +603,7 @@ class Template {
         $this->TemplateList = array();
         $this->Include = array();
         $this->Import = array();
-        $this->Block = array();
+        //$this->Block = array();
         $this->base_filename = "";
     }
     /**
@@ -653,15 +653,25 @@ class Template {
         $this->clearOutputVars();
         $template = $this->Template;
         if ($set) {
-            // include setting
-            $template = $this->setInclude($template);
-            // import setting
-            $template = $this->setImportTemplate($template);
-            // strip setting
-            $template = $this->setStripTemplate($template);
-            // set template vars
-            $template = $this->setTemplatesVars($template);
+            $template = $this->set_display_template($template);
         }
+        return $template;
+    }
+
+    /**
+     * @param $template
+     * @return mixed|srting
+     */
+    public function set_display_template($template)
+    {
+        // include setting
+        $template = $this->setInclude($template);
+        // import setting
+        $template = $this->setImportTemplate($template);
+        // strip setting
+        $template = $this->setStripTemplate($template);
+        // set template vars
+        $template = $this->setTemplatesVars($template);
         return $template;
     }
 
@@ -1118,7 +1128,7 @@ class Template {
     /**
      * @return mixed
      */
-    static public function callFilter()
+    public function callFilter()
     {
         if(func_num_args() > 0){
             $name = func_get_arg(0);
@@ -1128,7 +1138,7 @@ class Template {
             }
             if ( is_callable( self::$Functions[$name]->getFunc() ) ) {
                 try{
-                    $result = self::$Functions[$name]->callFunc($params,null);
+                    $result = self::$Functions[$name]->callFunc($params,$this);
                 }catch (TemplateException $e){
                     new TemplateException('Template : Error Functions '.$name.'('.implode(",",$params).')');
                 }
@@ -1304,6 +1314,14 @@ class Template {
                 case 'count':
                     $result = count($params[0]);
                     break;
+                case 'block':
+                    $block = $this->getBlock($params[0]);
+                    if($block){
+                        $result = $this->set_display_template($block);
+                    }else{
+                        $this->error(sprintf('not found block "%s"',$params[0]));
+                    }
+                    break;
                 case 'set':
                     if(!is_object($params[0]) && (count($params) > 1)){
                         $this->assign($params[0],$params[1]);
@@ -1364,6 +1382,38 @@ class Template {
             }
         }
         return $result;
+    }
+
+    /**
+     * @return array
+     */
+    public function getBlocks()
+    {
+        return $this->Block;
+    }
+
+    /**
+     * @param $key
+     * @return null
+     */
+    public function getBlock($key)
+    {
+        if(isset($this->Block[$key])){
+            return $this->Block[$key];
+        }
+        return null;
+    }
+
+    /**
+     * @param mixed $Block
+     */
+    public function setBlock($key,TemplateBlock $block)
+    {
+        if(isset($this->Block[$key])){
+            $this->Block[$key] = new TemplateBlock((string)$block,$this->Block[$key]);
+        }else{
+            $this->Block[$key] = $block;
+        }
     }
 
     /**
@@ -1543,11 +1593,8 @@ class Template {
             }
         }else if($type == "/block"){
             if($block_key != ""){
-                if(isset($this->Block[$block_key])){
-                    $this->Block[$block_key] = new TemplateBlock($tmp,$this->Block[$block_key]);
-                }else{
-                    $this->Block[$block_key] = new TemplateBlock($tmp);
-                }
+                $block = new TemplateBlock($tmp);
+                $this->setBlock($block_key,$block);
             }else{
                 $this->error('not input block key.');
             }
@@ -1559,6 +1606,14 @@ class Template {
         }
         return $template;
     }
+
+    /**
+     * @return string
+     */
+    public function setBlockData(){
+        return $this->_setBlockData($this->Template);
+    }
+
     /**
      * @param $template
      * @return string

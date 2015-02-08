@@ -8,10 +8,59 @@ namespace PMP;
 class htmlElement{
     protected $tag_name;
     protected $attr;
-    protected $inner_html;
+    protected $childs;
     protected $empty_tag;
+    protected $inner_html;
     static private $is_html5 = true;
     static private $spacer = '"';
+
+    /**
+     * @return mixed
+     */
+    public function getTagName()
+    {
+        return $this->tag_name;
+    }
+
+    /**
+     * @return array
+     */
+    public function getAttr()
+    {
+        return $this->attr;
+    }
+
+    /**
+     * @return array
+     */
+    public function getChilds()
+    {
+        return $this->childs;
+    }
+
+    /**
+     * @param htmlElement $elm
+     */
+    public function addChilds(htmlElement $elm)
+    {
+        $this->childs[] = $elm;
+    }
+
+    /**
+     * @param null $inner_html
+     */
+    public function setInnerHtml($inner_html)
+    {
+        $this->inner_html = $inner_html;
+    }
+
+    /**
+     * @return null
+     */
+    public function getInnerHtml()
+    {
+        return $this->inner_html;
+    }
 
     /**
      * @param $enable
@@ -35,19 +84,29 @@ class htmlElement{
     public function __construct($tag_name,$attr=array(),$inner_html=null,$empty_tag=true){
         $this->tag_name = $tag_name;
         $this->attr = $attr;
-        $this->inner_html = $inner_html;
+        $this->childs = array();
         $this->empty_tag = $empty_tag;
+        $this->inner_html = $inner_html;
     }
 
     /**
      *
      */
     public function __toString(){
-        $tag = '';
-        if(!$this->tag_name){
-            return $this->inner_html;
+        $inner_tag = '';
+        if(count($this->childs) > 0){
+            foreach($this->childs as $v){
+                $inner_tag .= $v;
+            }
+            if($this->inner_html){
+                $inner_tag .= $this->inner_html;
+            }
         }
-        $tag .= '<'.$this->tag_name;
+
+        if(!$this->tag_name){
+            return $inner_tag;
+        }
+        $tag = '<'.$this->tag_name;
         if(count($this->attr) > 0){
             $attr_list = array();
             foreach($this->attr as $key => $val){
@@ -59,11 +118,11 @@ class htmlElement{
             }
             $tag .= ' '.implode(' ',$attr_list);
         }
-        if($this->empty_tag && ($this->inner_html == null)){
+        if($this->empty_tag && (count($this->childs) <= 0)){
             $tag .= (self::$is_html5 ? '' : ' /').'>';
         }else{
             $tag .= '>';
-            $tag .= $this->inner_html;
+            $tag .= $inner_tag;
             $tag .= '</'.$this->tag_name.'>';
         }
         return $tag;
@@ -102,34 +161,5 @@ class htmlEmptyElement extends htmlElement{
     function __construct($value){
         $this->tag_name = null;
         $this->inner_html = $value;
-    }
-}
-
-/**
- * Class htmlElementList
- * @package PMP
- */
-class htmlElementList{
-    private $element;
-
-    /**
-     * @param $elm
-     */
-    function __construct(){
-        $this->element = array();
-    }
-
-    /**
-     * @param htmlElement $elm
-     */
-    public function addElement(htmlElement $elm){
-        $this->element[] = $elm;
-    }
-
-    /**
-     * @return string
-     */
-    public function __toString(){
-        return implode('',$this->element);
     }
 }

@@ -344,7 +344,7 @@ class FormElement{
 
     /**
      * @param array $html_attr
-     * @return null|htmlElement|htmlElementList
+     * @return null|htmlElement
      */
     public function getTag($html_attr=array())
     {
@@ -371,38 +371,35 @@ class FormElement{
                 }else if(is_callable($options)){
                     $list = $options();
                 }
-                $inner_html = '';
+                $html = new htmlElement('select',$html_attr);
                 foreach($list as $k => $v){
                     $opt = array();
                     if($value == $k){
                         $opt['selected'] = 'selected';
                     }
                     $opt['label'] = $v;
-                    $inner_html .= new htmlElement('option',$opt,$k);
+                    $html->addChilds(new htmlElement('option',$opt,$k));
                 }
-                $html = new htmlElement('select',$html_attr,$inner_html,false);
                 break;
             case FormElement::$TYPE_RADIO:
             case FormElement::$TYPE_CHECKBOX:
-                $html = new htmlElementList();
+                $html = new htmlElement(null);
                 if(isset($attr[FormElement::$ATTR_CHOICES])){
                     foreach($attr[FormElement::$ATTR_CHOICES] as $key => $v){
                         $id = $attr[FormElement::$ATTR_ATTR]['id'].'-'.$key;
                         $name = $attr[FormElement::$ATTR_ATTR]['id'].'[]';
-                        $html->addElement(
-                            new htmlElement('input',array_merge(
-                                $html_attr,
-                                array('type' => $type,'id' => $id,'name' => $name)))
-                        );
-                        $html->addElement(new htmlElement('label',array('for' => $id),htmlElement::escape($v)));
+
+                        $label = new htmlElement('label',array('for' => $id),htmlElement::escape($label),false);
+                        $label->addChilds(new htmlElement('input',array_merge($html_attr,array('type' => $type,'id' => $id,'name' => $name))));
+                        $html->addChilds($label);
                     }
                 }else{
-                    $html->addElement(
+                    $html->addChilds(
                         new htmlElement('input',array_merge(
                             $html_attr,
                             array('type' => $type)))
                     );
-                    $html->addElement(new htmlEmptyElement(htmlElement::escape($label)));
+                    $html->addChilds(new htmlEmptyElement(htmlElement::escape($label)));
                 }
                 break;
             case FormElement::$TYPE_TEXTAREA:

@@ -11,6 +11,8 @@ class Controller{
     protected $path;
     protected $class;
     protected $method;
+    protected $template;
+    protected $default_templatefiles;
     protected $session;
     protected $database;
     protected $project;
@@ -28,8 +30,17 @@ class Controller{
         $this->project = $project;
 
         $this->template = new Template();
+        $this->default_templatefiles = array();
         $this->session = new Session();
         $this->db = Database::getCurrentDB();
+    }
+
+    /**
+     * @param $filename
+     */
+    public function addDefaultTemplatefiles($filename)
+    {
+        $this->default_templatefiles[] = $filename;
     }
 
     /**
@@ -42,7 +53,6 @@ class Controller{
      *
      */
     protected function rendarParamSet(){
-        $routing = new Routing();
         // set template
         $this->template->assign_vars(array(
             // default set param
@@ -62,14 +72,7 @@ class Controller{
             "GET" => Request::getQuery()->getVars(),
             // session
             "FLASH" => Session::getFlashData(),
-            // routing
-            "ROUTING" => $routing
         ));
-        // functions
-        $this->template->filter("path",function($name,$val){
-            # TODO : Routing To Path
-            return $val;
-        });
 
         Session::clearFlash();
     }
@@ -81,14 +84,21 @@ class Controller{
      * @return bool
      * @throws PMPException
      */
-    public function rendar($filename="",$param=array(),$headers=array()){
-        if(!$filename){
-            $filename = $this->class.".html";
-        }
+    public function rendar($filename,$param=array(),$headers=array()){
         try{
             $this->rendarParamSet();
             // set template
             $this->template->assign_vars($param);
+            // default file
+            foreach($this->default_templatefiles as $file){
+                $template = new \PMP\Template();
+                if($template->load($file)){
+                    $template->setBlockData();
+                    foreach($template->getBlocks() as $key => $val){
+                        $this->template->setBlock($key,$val);
+                    }
+                }
+            }
             // load template
             if($this->template->load($this->path.'/view/'.$filename)){
                 $html = $this->template->get_display_template(true);

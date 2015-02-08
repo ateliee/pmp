@@ -47,22 +47,65 @@ PMP\Template::filter('html_element',function(htmlElement $element,$param=array()
     return $element;
 });
 /**
+ * routing
+ */
+PMP\Template::filter("path",function(){
+    $routing = new \PMP\Routing();
+    return call_user_func_array(array($routing , 'getUrl'),func_get_args());
+});
+/**
  * form template function
  */
+\PMP\Template::filter('form_rows',function(\PMP\Template $template,$form){
+    $tags = array();
+    if(is_array($form)){
+        foreach($form as $key => $val){
+            $tags[] = \PMP\Template::callFilter('form_row',$val);
+        }
+    }else{
+        throw new \PMP\PMPException('form_rows() paramater is not array.');
+    }
+    return implode('',$tags);
+},true);
+\PMP\Template::filter('form_row',function(\PMP\Template $template,$form,$attr=array()){
+    $tag = $template->callFilter('form_label',$form);
+    $tag .= $template->callFilter('form_wedget',$form,$attr);
+    return $tag;
+},true);
 \PMP\Template::filter('form_label',function($form,$attr=array()){
     if(!($form instanceof \PMP\FormElement)){
         throw new \PMP\PMPException('form_label() paramater is not instanceof Form.');
     }
     $label = new htmlElement('label',
-        array_merge($attr,array('for' => $form->getFormId())),htmlElement::escape($form->getFormLabel()));
+        array_merge($attr,array('for' => $form->getFormId())),htmlElement::escape($form->getFormLabel()),false);
     return $label;
 });
+\PMP\Template::filter('html_element_set',function(\PMP\Template $template,htmlElement $html_element){
+    $param = array(
+        'tagName' => $html_element->getTagName(),
+        'childs' => $html_element->getChilds(),
+        'inner_html' => $html_element->getInnerHtml(),
+        'attr' => $html_element->getAttr(),
+    );
+    $template->assign_vars($param);
+},true);
 \PMP\Template::filter('form_wedget',function(\PMP\Template $template,$form,$attr=array()){
     if(!($form instanceof \PMP\FormElement)){
         throw new \PMP\PMPException('form_label() paramater is not instanceof Form.');
     }
     $form->setOutput(true);
-    return $form->getTag($attr);
+
+    $tag = $form->getTag($attr);
+    $block = null;
+    if(!($block = $template->getBlock('form_wedget_'.$form->getFormId()))){
+        if(!($block = $template->getBlock('form_wedget_'.$form->getType()))){
+        }
+    }
+    if($block){
+        $template->callFilter('html_element_set',$tag);
+        return $template->set_display_template($block);
+    }
+    return $tag;
 },true);
 \PMP\Template::filter('form_rest',function($form){
     $output = '';
@@ -76,18 +119,17 @@ PMP\Template::filter('html_element',function(htmlElement $element,$param=array()
     }
     return $output;
 });
-
-\PMP\Template::filter('form_errors',function($form){
+\PMP\Template::filter('form_errors',function(\PMP\Template $template,$form){
     $errors = array();
     if(is_array($form)){
         foreach($form as $key => $val){
-            $errors[] = \PMP\Template::callFilter('form_error',$val);
+            $errors[] = $template->callFilter('form_error',$val);
         }
     }else{
-        throw new \PMP\PMPException('form_errors() paramater is not array or FormElement.');
+        throw new \PMP\PMPException('form_errors() paramater is not array.');
     }
     return implode('',$errors);
-});
+},true);
 \PMP\Template::filter('form_error',function($form){
     $errors = null;
     if($form instanceof \PMP\FormElement){
@@ -95,7 +137,7 @@ PMP\Template::filter('html_element',function(htmlElement $element,$param=array()
             $errors = $error;
         }
     }else{
-        throw new \PMP\PMPException('form_errors() paramater is not array or FormElement.');
+        throw new \PMP\PMPException('form_errors() paramater is not FormElement.');
     }
     return $errors;
 });
