@@ -15,6 +15,19 @@ class htmlElement{
     static private $spacer = '"';
 
     /**
+     * @param $tag_name
+     * @param array $attr
+     * @param null $inner_html
+     */
+    public function __construct($tag_name,$attr=array(),$inner_html=null,$empty_tag=true){
+        $this->tag_name = $tag_name;
+        $this->attr = $attr;
+        $this->childs = array();
+        $this->empty_tag = $empty_tag;
+        $this->inner_html = $inner_html;
+    }
+
+    /**
      * @return mixed
      */
     public function getTagName()
@@ -74,19 +87,6 @@ class htmlElement{
      */
     static function setSpacer($spacer){
         self::$spacer = $spacer;
-    }
-
-    /**
-     * @param $tag_name
-     * @param array $attr
-     * @param null $inner_html
-     */
-    public function __construct($tag_name,$attr=array(),$inner_html=null,$empty_tag=true){
-        $this->tag_name = $tag_name;
-        $this->attr = $attr;
-        $this->childs = array();
-        $this->empty_tag = $empty_tag;
-        $this->inner_html = $inner_html;
     }
 
     /**

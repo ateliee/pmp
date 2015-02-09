@@ -388,10 +388,13 @@ class FormElement{
                     foreach($attr[FormElement::$ATTR_CHOICES] as $key => $v){
                         $id = $attr[FormElement::$ATTR_ATTR]['id'].'-'.$key;
                         $name = $attr[FormElement::$ATTR_ATTR]['id'].'[]';
-
-                        $label = new htmlElement('label',array('for' => $id),htmlElement::escape($label),false);
-                        $label->addChilds(new htmlElement('input',array_merge($html_attr,array('type' => $type,'id' => $id,'name' => $name))));
-                        $html->addChilds($label);
+                        $html->addChilds(
+                            new htmlElement('input',array_merge(
+                                $html_attr,
+                                array('type' => $type,'id' => $id,'name' => $name)))
+                        );
+                        $html->addChilds(
+                            new htmlElement('label',array('for' => $id),htmlElement::escape($v),false));
                     }
                 }else{
                     $html->addChilds(

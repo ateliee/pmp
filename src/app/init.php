@@ -84,10 +84,20 @@ PMP\Template::filter("path",function(){
     $param = array(
         'tagName' => $html_element->getTagName(),
         'childs' => $html_element->getChilds(),
-        'inner_html' => $html_element->getInnerHtml(),
+        'innerHtml' => $html_element->getInnerHtml(),
         'attr' => $html_element->getAttr(),
     );
     $template->assign_vars($param);
+},true);
+\PMP\Template::filter('html_element_set_checkbox',function(\PMP\Template $template,$childs){
+    $checkbox = array();
+    for($i=0;$i<count($childs);$i+=2){
+        $checkbox[] = array(
+            'input' => $childs[$i],
+            'label' => $childs[$i+1]
+        );
+    }
+    $template->assign_vars(array('childs' => $checkbox));
 },true);
 \PMP\Template::filter('form_wedget',function(\PMP\Template $template,$form,$attr=array()){
     if(!($form instanceof \PMP\FormElement)){

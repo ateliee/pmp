@@ -3,11 +3,15 @@
 {block form_wedget_input}
 {/block}
 {block form_wedget_textarea}
-    <textarea name="{$attr.name}"{block('form_wedget_attr')}>{$inner_html}</textarea>
+    <textarea name="{$attr.name}"{block('form_wedget_attr')}>{$innerHtml}</textarea>
 {/block}
 {block form_wedget_text}
     <input name="{$attr.name}"{block('form_wedget_attr')}>
 {/block}
 {block form_wedget_checkboxsimple}
-<input name="{$attr.name}"{block('form_wedget_attr')}> <label for="{$attr.id}">{$inner_html}</label>
+{html_element_set($checkbox.input)}<input name="{$attr.name}"{block('form_wedget_attr')}>
+{html_element_set($checkbox.label)}<label{block('form_wedget_attr')}>{$innerHtml}</label>
+{/block}
+{block form_wedget_checkbox}
+    {html_element_set_checkbox($childs)}{foreach $childs as $checkbox}{block('form_wedget_checkboxsimple')}{/foreach}
 {/block}
