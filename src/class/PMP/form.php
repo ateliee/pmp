@@ -716,9 +716,7 @@ class Form{
                         if(($error->count() <= 0) && $val->getAttrValue(FormElement::$ATTR_CHOICES)){
                             $choices = $val->getAttrValue(FormElement::$ATTR_CHOICES);
                             $c = true;
-                            if(!$value){
-                                $c = false;
-                            }else if(is_array($choices) && !isset($choices[$value])){
+                            if(is_array($choices) && !isset($choices[$value])){
                                 $c = false;
                             }else if(is_object($choices) && ($choices instanceof Model)){
                                 if(!$choices->findQuery(intval($value))->getResults()){
