@@ -388,11 +388,11 @@ class FormElement{
                     foreach($attr[FormElement::$ATTR_CHOICES] as $key => $v){
                         $id = $attr[FormElement::$ATTR_ATTR]['id'].'-'.$key;
                         $name = $this->getFormName().'[]';
-                        $html->addChilds(
-                            new htmlElement('input',array_merge(
-                                $html_attr,
-                                array('type' => $type,'id' => $id,'name' => $name,'value' => $key)))
-                        );
+                        $input_attr = array_merge($html_attr,array('type' => $type,'id' => $id,'name' => $name,'value' => $key));
+                        if(in_array($key,$value)){
+                            $input_attr['checked'] = 'checked';
+                        }
+                        $html->addChilds(new htmlElement('input',$input_attr));
                         $html->addChilds(
                             new htmlElement('label',array('for' => $id),htmlElement::escape($v),false));
                     }
