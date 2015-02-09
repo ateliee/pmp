@@ -391,7 +391,7 @@ class FormElement{
                         $html->addChilds(
                             new htmlElement('input',array_merge(
                                 $html_attr,
-                                array('type' => $type,'id' => $id,'name' => $name)))
+                                array('type' => $type,'id' => $id,'name' => $name,'value' => $key)))
                         );
                         $html->addChilds(
                             new htmlElement('label',array('for' => $id),htmlElement::escape($v),false));
