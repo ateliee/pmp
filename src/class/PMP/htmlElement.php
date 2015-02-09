@@ -98,9 +98,9 @@ class htmlElement{
             foreach($this->childs as $v){
                 $inner_tag .= $v;
             }
-            if($this->inner_html){
-                $inner_tag .= $this->inner_html;
-            }
+        }
+        if($this->inner_html){
+            $inner_tag .= $this->inner_html;
         }
 
         if(!$this->tag_name){
