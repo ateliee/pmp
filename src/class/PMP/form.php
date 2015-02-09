@@ -387,7 +387,7 @@ class FormElement{
                 if(isset($attr[FormElement::$ATTR_CHOICES])){
                     foreach($attr[FormElement::$ATTR_CHOICES] as $key => $v){
                         $id = $attr[FormElement::$ATTR_ATTR]['id'].'-'.$key;
-                        $name = $attr[FormElement::$ATTR_ATTR]['id'].'[]';
+                        $name = $this->getFormName().'[]';
                         $html->addChilds(
                             new htmlElement('input',array_merge(
                                 $html_attr,
