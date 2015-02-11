@@ -574,7 +574,7 @@ class ModelColumn{
                 $model = new $model_name;
                 $column_name = $this->connection->getTargetColumn();
                 if($model && $model->isExists($column_name)){
-                    $column = $model->get($column_name);
+                    $column = $model->getColumn($column_name);
                     $reference = new ModelReference($model,$column);
                     if($this->connection->getDelete()){
                         $reference->setDelete($this->connection->getDelete());

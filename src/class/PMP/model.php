@@ -97,7 +97,7 @@ class Model{
             if($v->getFormenable()){
                 $columns[$k] = array(
                     "type" => self::convertColumnsToFormType($v),
-                    "value" => $this->getParamater($k),
+                    "value" => $this->get($k),
                     "attr" => self::convertColumnsToFormAttr($v),
                 );
             }
@@ -117,7 +117,7 @@ class Model{
      * @param $key
      * @return ModelColumn
      */
-    public function get($key){
+    public function getColumn($key){
         return $this->table_fields[$key];
     }
 
@@ -153,7 +153,7 @@ class Model{
             $result = $this->findQuery($args)->getResult();
         }
         if(isset($result)){
-            $this->setParameters($result,true,true);
+            $this->setArray($result,true,true);
             return $this;
         }
         return null;
@@ -252,7 +252,7 @@ class Model{
             foreach($results as $key => $item){
                 $class_name = get_class($this);
                 $obj = new $class_name();
-                $obj->setParameters($item,true,true);
+                $obj->setArray($item,true,true);
                 $list[$key] = $obj;
             }
         }
@@ -289,7 +289,7 @@ class Model{
      * @return $this
      * @throws PMPException
      */
-    public function setParameter($key,$val,$method_call = true,$db_data=false)
+    public function set($key,$val,$method_call = true,$db_data=false)
     {
         if(is_string($key)){
             $method = "set".ucfirst($key);
@@ -323,7 +323,7 @@ class Model{
                 }
             }
         }else{
-            throw new PMPException('Model->setParameter() args.');
+            throw new PMPException('Model->set() args.');
         }
         return $this;
     }
@@ -335,14 +335,14 @@ class Model{
      * @return $this
      * @throws PMPException
      */
-    public function setParameters($args,$method_call = true,$db_data=false)
+    public function setArray($args,$method_call = true,$db_data=false)
     {
         if(is_array($args)){
             foreach($args as $k => $v){
-                $this->setParameter($k,$v,$method_call,$db_data);
+                $this->set($k,$v,$method_call,$db_data);
             }
         }else{
-            throw new PMPException('Model->setParameters() args.');
+            throw new PMPException('Model->setArray() args.');
         }
         return $this;
     }
@@ -351,7 +351,7 @@ class Model{
      * @param $key
      * @return mixed
      */
-    public function getParamater($key)
+    public function get($key)
     {
         $method = 'get'.ucfirst($key);
         if(method_exists($this,$method)){
@@ -485,7 +485,7 @@ class Model{
             return $this->$method_name();
         }else if(property_exists(get_class($this),$name)){
             if($this->isExists($name)){
-                $column = $this->get($name);
+                $column = $this->getColumn($name);
                 if($column->isCompareColumn()){
                     $target_name = $column->getTargetName();
                     $target_column = $column->getTargetColumn();

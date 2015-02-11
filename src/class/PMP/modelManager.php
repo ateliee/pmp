@@ -268,7 +268,7 @@ class Model_Query
     {
         $model = new $this->model_name;
         if($results = $this->getArrayResult()){
-            $model->setParameters($results);
+            $model->setArray($results);
         }
         return $model;
     }
@@ -310,7 +310,7 @@ class Model_Query
         if($query_results = $this->getArrayResults()){
             foreach($query_results as $res){
                 $model = new $this->model_name;
-                $model->setParameters($res);
+                $model->setArray($res);
                 $results[] = $model;
             }
         }

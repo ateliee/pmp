@@ -59,7 +59,7 @@ class AuthModel extends Model implements AuthInterface{
      * @return string
      */
     public function setPassword($val){
-        $this->setParameter("salt",md5(uniqid(rand(),1)));
+        $this->set("salt",md5(uniqid(rand(),1)));
         return ($this->password = $this->makePassword($val));
     }
 
@@ -90,7 +90,7 @@ class AuthModel extends Model implements AuthInterface{
         $class_name = get_class($this);
         foreach($results as $result){
             $class = (new $class_name);
-            $u = $class->setParameters($result,false);
+            $u = $class->setArray($result,false);
             if($u->getUserID() == $user->getUserID() && $u->equalsPassword($user->getPassword())){
                 return $u;
             }

@@ -543,7 +543,7 @@ class Form{
             }
             $this->addElement($key,$elm);
 
-            $this->setValue($key,$model->getParamater($key));
+            $this->setValue($key,$model->get($key));
         }
         $this->models[$table_name] = $model;
         return $this;
@@ -737,7 +737,7 @@ class Form{
                         if($this->models){
                             foreach($this->models as $k => $v){
                                 if($v->isExists($key)){
-                                    $column = $v->get($key);
+                                    $column = $v->getColumn($key);
                                     if($column->getDBColumn()->isUnique()){
                                         if($res = $v->findQuery(array($key => $value))->getResults()){
                                             $idv = $request->get($val->getPrex().'id',null);
@@ -758,7 +758,7 @@ class Form{
                                         }
                                     }
                                     if(!$val->getIsArray()){
-                                        $v->setParameter($key,$value);
+                                        $v->set($key,$value);
                                     }
                                 }
                             }
@@ -772,7 +772,7 @@ class Form{
                 if($val->getIsArray()){
                     foreach($this->models as $k => $v){
                         if($v->isExists($key)){
-                            $v->setParameter($key,$valuelist);
+                            $v->set($key,$valuelist);
                         }
                     }
                 }
