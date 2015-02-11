@@ -12,8 +12,8 @@ class Response {
     /**
      * @param $arr
      */
-    function  __construct($con){
-        $this->contents = $con;
+    function  __construct($contents){
+        $this->contents = $contents;
         $this->setHeaders(array());
     }
 
@@ -50,5 +50,20 @@ class Response {
             header($key.":".$val);
         }
         print $this->contents;
+    }
+}
+
+/**
+ * Class JsonResponse
+ * @package PMP
+ */
+class JsonResponse extends Response{
+
+    function __construct($contents)
+    {
+        parent::__construct($contents);
+        $this->setHeaders(array(
+            'Content-Type' => 'application/json; charset=utf-8'
+        ));
     }
 }

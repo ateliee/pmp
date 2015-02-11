@@ -60,27 +60,17 @@ class File{
     const PATHINFO_EXTENSION = 4;
     const PATHINFO_FILENAME = 8;
 
-    private $files;
-
-    function __construct()
-    {
-        $this->files = array();
-    }
-
     /**
      * @param $ext
      * @param string $default
      * @return string
      */
-    static public function getMIMEtoExtention($ext,$default=''){
+    static public function getMIMEtoExtention($ext,$default='application/octet-stream'){
         $ext = strtolower($ext);
         if(isset(self::$MIME_TYPE[$ext])){
             return self::$MIME_TYPE[$ext];
         }
-        if($default){
-            return $default;
-        }
-        return 'application/octet-stream';
+        return $default;
     }
 
     /**
@@ -170,168 +160,140 @@ class File{
         return "";
     }
 
-    /**
-     * @param $path
-     * @return array
-     */
-    static public function searchImages($path){
-        return self::searchExtention($path,array("jpeg","jpg","png","gif"));
-    }
+    private $filename;
+    private $mode;
+    private $fp;
+    private $contents;
 
     /**
-     * @param $path
-     * @param null $ext
+     * @param $message
+     * @throws \Exception
      */
-    static public function searchExtention($path,$ext=null){
-        if(is_array($ext)){
-            $files = array();
-            foreach($ext as $e){
-                if(file_exists($path.".".strtolower($e))){
-                    $files[] = $path.".".strtolower($e);
-                }
-                if(file_exists($path.".".strtoupper($e))){
-                    $files[] = $path.".".strtoupper($e);
-                }
-            }
-            return $files;
-        }
-        $filename = $path.".*";
-        return glob($filename);
+    private function error($message)
+    {
+        throw new \Exception($message);
     }
 
-    /**
-     * @param $dir
-     * @param int $perm
-     * @param bool $recursive
-     * @return bool
-     */
-    static public function mkDir($dir,$perm=0777,$recursive=false){
-        if(!is_dir($dir)){
-            mkdir($dir,$perm,$recursive);
-            return true;
+    function __construct($filename=null,$mode='a+')
+    {
+        if($filename){
+            $this->open($filename,$mode);
         }
-        return false;
-    }
-
-    /**
-     * @param $source
-     * @param $dest
-     * @param bool $rewrite
-     * @return bool
-     */
-    static public function copy($source,$dest,$rewrite=true){
-        if(!$rewrite){
-            if(@file_exists($source)){
-                return false;
-            }
-        }
-        if(@copy($source,$dest)){
-            return true;
-        }
-        return false;
     }
 
     /**
      * @param $filename
-     * @param $callback
-     * @param bool $child
+     * @param string $mode
      * @return bool
      */
-    static public function callbackDir($filename,$callback,$child=false){
-        if(is_dir($filename)){
-            if($callback($filename)){
+    public function open($filename,$mode='a+')
+    {
+        if(!$mode){
+            $this->error('must be paramater "mode".');
+        }
+        if($this->fp = fopen($filename,$mode)){
+            $this->mode = $mode;
+            $this->contents = '';
+            if(flock($this->fp,LOCK_EX)){
                 return true;
+            }else{
+                $this->fp = null;
             }
-            $files = array();
-            $dh = opendir($filename);
-            while ($file = readdir($dh)) {
-                if ($file == '.' || $file == '..') {
-                    continue;
-                }
-                $path = $filename . "/" . $file;
-                if(self::callbackDir($path,$callback)){
-                    return true;
-                }
+        }
+        return false;
+    }
+
+    /**
+     * @return bool
+     */
+    public function read()
+    {
+        if($this->fp){
+            while (!feof($this->fp)) {
+                $this->contents .= fread($this->fp,1024);
             }
-            closedir($dh);
         }else{
-            if($callback($filename)){
-                return true;
-            }
+            $this->error(sprintf('not open file.(filename is %s)',$this->filename));
         }
-        return false;
+        return $this->contents;
     }
 
     /**
-     * @param $filename
-     * @return bool
+     * @return mixed
      */
-    static public function delete($filename){
-        if(is_string($filename)){
-            if(is_dir($filename)){
-                self::deleteDir($filename,true);
-            }else if(is_file($filename)){
-                @unlink($filename);
-            }
-        }else if(is_array($filename)){
-            foreach($filename as $file){
-                self::delete($file);
-            }
-        }
-        return true;
-    }
-
-    /**
-     * @param $filename
-     * @param bool $delete
-     * @return bool
-     */
-    static public function deleteDir($filename, $delete = true)
+    public function getContents()
     {
-        if(is_dir($filename)){
-            $dh = opendir($filename);
-            while ($file = readdir($dh)) {
-                if ($file == '.' || $file == '..') {
-                    continue;
-                }
-                $path = $filename . "/" . $file;
-                self::delete($path);
-            }
-            if ($delete) {
-                @rmdir($filename);
-            }
-            closedir($dh);
+        return $this->contents;
+    }
+
+    /**
+     * @param $message
+     */
+    public function addLine($message)
+    {
+        $this->add($message.PHP_EOL);
+    }
+
+    /**
+     * @param $message
+     */
+    public function add($message)
+    {
+        if($this->fp){
+            fwrite($this->fp,$message);
+        }else{
+            $this->error(sprintf('not open file.(filename is %s)',$this->filename));
+        }
+    }
+
+    /**
+     * @param $offset
+     * @param int $where
+     */
+    public function seek($offset,$where=SEEK_SET)
+    {
+        if($this->fp){
+            fseek($this->fp,$offset,$where);
+        }else{
+            $this->error(sprintf('not open file.(filename is %s)',$this->filename));
+        }
+    }
+
+    /**
+     *
+     */
+    public function close()
+    {
+        if($this->fp){
+            flock($this->fp,LOCK_UN);
+            fclose($this->fp);
+            $this->fp = null;
+            $this->mode = null;
+        }
+    }
+
+    /**
+     * @param callable $output_callable
+     * @return bool
+     */
+    public function ob_start(callable $output_callable=null)
+    {
+        if(ob_start($output_callable)){
             return true;
         }
         return false;
     }
 
     /**
-     * @param $filename
+     * @param bool $output
      */
-    public function load($filename)
+    public function ob_end($output=false)
     {
-        if(is_dir($filename)){
-            $dh = opendir($filename);
-            while ($file = readdir($dh)) {
-                if ($file == '.' || $file == '..') {
-                    continue;
-                }
-                $path = $filename . "/" . $file;
-                $this->files[] = $path;
-                $this->load($path);
-            }
-            closedir($dh);
-        }else if(file_exists($filename)){
-            $this->files[] = $filename;
+        $this->add(ob_get_contents());
+        if($output){
+            ob_end_flush();
+        }else{
+            ob_end_clean();
         }
-    }
-
-    /**
-     * @return array
-     */
-    public function getFiles()
-    {
-        return $this->files;
     }
 }
