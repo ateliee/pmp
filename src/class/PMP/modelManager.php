@@ -50,6 +50,7 @@ class ModelManager
             $query = new Model_Query($name,Database::getCurrentDB(),$alias);
             return $query;
         }
+
         $trace = debug_backtrace();
         throw new \Exception(sprintf('Not Found model : %s of %s line %d',$name,$trace[0]['file'],$trace[0]['line']));
     }
