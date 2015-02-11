@@ -1180,9 +1180,15 @@ class Template {
                 $str = array_slice($vlist,0,-1);
                 $func = $vlist[count($vlist) - 1];
                 $obj = $this->getStringVariable(implode('.',$str),$this->Vars,false);
+                $get_func = 'get'.ucfirst($func);
                 if(is_object($obj)){
-                    $func = 'get'.ucfirst($func);
-                    $result = call_user_func_array(array($obj,$func),$params);
+                    if(is_callable(array($obj,$func))){
+                        $result = call_user_func_array(array($obj,$func),$params);
+                    }else if(is_callable(array($obj,$get_func))){
+                        $result = call_user_func_array(array($obj,$get_func),$params);
+                    }else{
+                        $this->error('not found object function '.$node->getName());
+                    }
                 }else{
                     $this->error('not found object function '.$node->getName());
                 }

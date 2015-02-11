@@ -1667,13 +1667,19 @@ class SQL_Query{
     }
 
     /**
-     * @param $start
-     * @param $limit
      * @return $this
+     * @throws \Exception
      */
-    public function limit($start,$limit){
-        $this->start = $start;
-        $this->limit = $limit;
+    public function limit(){
+        if(func_num_args() == 1){
+            $this->start = 0;
+            $this->limit = func_get_arg(0);
+        }else if(func_num_args() == 2){
+            $this->start = func_get_arg(0);
+            $this->limit = func_get_arg(1);
+        }else{
+            throw new \Exception('Must Be limit() call Paramater 1 or 2.');
+        }
         return $this;
     }
 
@@ -1757,7 +1763,7 @@ class SQL_Query{
                 if($k == 0){
                     continue;
                 }
-                $replaces[] = "?";
+                $replaces[] = ":".$k;
                 $args[] = $this->database->escape($v);
             }
             return str_replace($replaces,$args,$sql);

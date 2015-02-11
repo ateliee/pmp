@@ -377,8 +377,8 @@ class FormElement{
                     if($value == $k){
                         $opt['selected'] = 'selected';
                     }
-                    $opt['label'] = $v;
-                    $html->addChilds(new htmlElement('option',$opt,$k));
+                    $opt['value'] = $k;
+                    $html->addChilds(new htmlElement('option',$opt,$v,false));
                 }
                 break;
             case FormElement::$TYPE_RADIO:
@@ -737,7 +737,8 @@ class Form{
                         if($this->models){
                             foreach($this->models as $k => $v){
                                 if($v->isExists($key)){
-                                    if($v->get($key)->getDBColumn()->isUnique()){
+                                    $column = $v->get($key);
+                                    if($column->getDBColumn()->isUnique()){
                                         if($res = $v->findQuery(array($key => $value))->getResults()){
                                             $idv = $request->get($val->getPrex().'id',null);
                                             foreach($res as $rk => $rv){
@@ -747,6 +748,13 @@ class Form{
                                                 $error->add('unique',$this->getErrorMessage('unique',$label));
                                                 break;
                                             }
+                                        }
+                                    }
+                                    if($column->getConnection()){
+                                        $taget_class = $column->getConnection()->getTargetName();
+                                        $target = new $taget_class();
+                                        if(!$target->find(array($column->getConnection()->getTargetColumn() => $value))){
+                                            $error->add('required',$this->getErrorMessage('required',$label));
                                         }
                                     }
                                     if(!$val->getIsArray()){

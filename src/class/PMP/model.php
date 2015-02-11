@@ -123,7 +123,8 @@ class Model{
      * @return string
      */
     public function getTableName(){
-        return get_class($this);
+        $classes = explode('\\',get_class($this));
+        return end($classes);
     }
 
     /**
@@ -469,5 +470,40 @@ class Model{
             }
         }
         return $change_column_num;
+    }
+
+    /**
+     * @param $name
+     * @return mixed
+     */
+    function __get($name)
+    {
+        $method_name = 'get'.ucfirst($name);
+        if(method_exists(get_class($this),$method_name)){
+            return $this->$method_name();
+        }else if(property_exists(get_class($this),$name)){
+            if($this->isExists($name)){
+                $column = $this->get($name);
+                if($column->isCompareColumn()){
+                    $target_name = $column->getTargetName();
+                    $target_column = $column->getTargetColumn();
+
+                    $mm = new ModelManager();
+                    $res = $mm->createQuery($target_name,'p')
+                        ->where('`p`.`'.$target_column.'`=:id')
+                        ->setParamater('id',$this->getId())
+                        ->getResults();
+                    return $res;
+                }else if($column->getConnection()){
+                    $target_name = $column->getConnection()->getTargetName();
+                    $target_column = $column->getConnection()->getTargetColumn();
+                    $model = new $target_name();
+                    $model->find(array($target_column => $this->$name));
+                    return $model;
+                }
+            }
+            return $this->$name;
+        }
+        trigger_error(sprintf('Undefined property %s:%s',get_class($this),$name));
     }
 }

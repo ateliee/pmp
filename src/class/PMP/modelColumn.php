@@ -64,6 +64,77 @@ class ModelReference{
 }
 
 /**
+ * Class ModelConnectionColumn
+ * @package PMP
+ */
+class ModelConnectionColumn{
+    private $target_name;
+    private $target_column;
+    private $delete;
+    private $update;
+    /**
+     * @param $field
+     */
+    function __construct($field){
+        foreach($field as $k => $v){
+            $k = strtolower($k);
+            if($k == 'target'){
+                if(preg_match('/^(.+)\.(.+)$/',$v,$matchs)){
+                    $this->target_name = $matchs[1];
+                    $this->target_column = $matchs[2];
+                }else{
+                    $trace = debug_backtrace();
+                    throw new \Exception('Must Be Target Column is "ClassName.ColumnName" in '.$trace[1]['class']);
+                }
+            }else if($k == 'delete'){
+                $this->delete = $v;
+            }else if($k == 'update'){
+                $this->update = $v;
+            }else{
+                $trace = debug_backtrace();
+                throw new \Exception('not found ModelConnectionColumn option "'.$k.'" in '.$trace[1]['class']);
+            }
+        }
+        if(!$this->target_name){
+            throw new \Exception('not found ModelConnectionColumn option "target" key.');
+        }
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getTargetName()
+    {
+        return $this->target_name;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getTargetColumn()
+    {
+        return $this->target_column;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getUpdate()
+    {
+        return $this->update;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getDelete()
+    {
+        return $this->delete;
+    }
+
+}
+
+/**
  * Class ModelColumn
  * @package PMP
  */
@@ -97,6 +168,9 @@ class ModelColumn{
     static $TYPE_ARRAY = 'array';
     static $TYPE_DATA = 'data';
 
+    static $TYPE_MANY = 'Many';
+    static $TYPE_ONE = 'One';
+
     // convert
     static $CONVERT_NUMBER = 1;
     static $CONVERT_JP = 2;
@@ -114,6 +188,8 @@ class ModelColumn{
     protected $formenable;
     protected $ai;
     protected $unique;
+    protected $target_name;
+    protected $target_column;
 
     protected $reference;
     protected $connection;
@@ -157,6 +233,8 @@ class ModelColumn{
                 $this->setChoices($v);
             }else if($k == 'connection'){
                 $this->setConnection($v);
+            }else if($k == 'target'){
+                $this->setTarget($v);
             }else{
                 $trace = debug_backtrace();
                 throw new \Exception('not found ModelColumn option "'.$k.'" in '.$trace[1]['class']);
@@ -165,6 +243,30 @@ class ModelColumn{
         if(!$this->type){
             throw new \Exception('not found ModelColumn option "type" key.');
         }
+        if(!$this->isDBColumn()){
+            if(!$this->target_name || !$this->target_column){
+                throw new \Exception('not found ModelColumn option "target" key.');
+            }
+        }
+    }
+
+    /**
+     * @return bool
+     */
+    public function isDBColumn()
+    {
+        return !($this->isCompareColumn());
+    }
+
+    /**
+     * @return bool
+     */
+    public function isCompareColumn()
+    {
+        if(in_array($this->type,array(self::$TYPE_ONE,self::$TYPE_MANY))){
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -224,12 +326,43 @@ class ModelColumn{
             self::$TYPE_URL,
             self::$TYPE_ARRAY,
             self::$TYPE_DATA,
+            self::$TYPE_MANY,
+            self::$TYPE_ONE,
         );
         if(in_array($type,$types)){
             $this->type = $type;
         }else{
             throw new \Exception('not found ModelColumn type key "'.$type.'"');
         }
+    }
+
+    /**
+     * @param mixed $target_column
+     */
+    protected function setTarget($target)
+    {
+        if(preg_match('/^(.+)\.(.+)$/',$target,$matchs)){
+            $this->target_name = $matchs[1];
+            $this->target_column = $matchs[2];
+        }else{
+            throw new \Exception('Not Support ModelColumn target key "'.$target.'"');
+        }
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getTargetColumn()
+    {
+        return $this->target_column;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getTargetName()
+    {
+        return $this->target_name;
     }
 
     /**
@@ -375,16 +508,16 @@ class ModelColumn{
                 $v[$kk] = $this->getConvertValue($vv);
             }
         }else{
-            if($this->convert | self::$CONVERT_NUMBER){
+            if($this->convert & self::$CONVERT_NUMBER){
                 $v = mb_convert_kana($v, 'sn');
             }
-            if($this->convert | self::$CONVERT_JP){
+            if($this->convert & self::$CONVERT_JP){
                 $v = mb_convert_kana($v, 'Hc');
             }
-            if($this->convert | self::$CONVERT_KANA){
+            if($this->convert & self::$CONVERT_KANA){
                 $v = mb_convert_kana($v, 'KCV');
             }
-            if($this->convert | self::$CONVERT_ALPHABET){
+            if($this->convert & self::$CONVERT_ALPHABET){
                 $v = mb_convert_kana($v, 'sa');
             }
         }
@@ -408,11 +541,21 @@ class ModelColumn{
     }
 
     /**
+     * @return ModelConnectionColumn
+     */
+    public function getConnection()
+    {
+        return $this->connection;
+    }
+
+    /**
      * @param mixed $connection
      */
     protected function setConnection($connection)
     {
         if(is_array($connection)){
+            $this->connection = new ModelConnectionColumn($connection);
+        }else if($connection instanceof ModelConnectionColumn){
             $this->connection = $connection;
         }else{
             throw new \Exception('not support connection value.must be array().');
@@ -427,29 +570,26 @@ class ModelColumn{
         if($this->connection && !$this->reference){
             $reference = null;
             // create reference
-            if(isset($this->connection['target'])){
-                if(preg_match('/^(.+)\.(.+)$/',$this->connection['target'],$matchs) && ($model_name = ModelManager::find($matchs[1]))){
-                    $model = new $model_name;
-                    $column_name = $matchs[2];
-                    if($model && $model->isExists($column_name)){
-                        $column = $model->get($column_name);
-                        $reference = new ModelReference($model,$column);
-                        if(isset($this->connection['delete'])){
-                            $reference->setDelete($this->connection['delete']);
-                        }
-                        if(isset($this->connection['update'])){
-                            $reference->setUpdate($this->connection['update']);
-                        }
-                        $this->reference = $reference;
-                    }else{
-                        throw new \Exception('not found connection target paramater.column name is "'.$this->connection['target'].'"');
+            if($model_name = ModelManager::find($this->connection->getTargetName())){
+                $model = new $model_name;
+                $column_name = $this->connection->getTargetColumn();
+                if($model && $model->isExists($column_name)){
+                    $column = $model->get($column_name);
+                    $reference = new ModelReference($model,$column);
+                    if($this->connection->getDelete()){
+                        $reference->setDelete($this->connection->getDelete());
                     }
+                    if($this->connection->getUpdate()){
+                        $reference->setUpdate($this->connection->getUpdate());
+                    }
+                    $this->reference = $reference;
                 }else{
-                    throw new \Exception('not found connection target paramater.column name is "'.$this->connection['target'].'"');
+                    throw new \Exception('not found connection target paramater.column name is "'.$this->connection->getTargetName().'"');
                 }
             }else{
-                throw new \Exception('must be connection target paramater.');
+                throw new \Exception('not found connection target paramater.column name is "'.$this->connection->getTargetName().'"');
             }
+
         }
         return $this->reference;
     }

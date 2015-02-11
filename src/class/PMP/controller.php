@@ -16,6 +16,7 @@ class Controller{
     protected $session;
     protected $database;
     protected $project;
+    protected $modelManager;
 
     /**
      * @param $path
@@ -32,7 +33,8 @@ class Controller{
         $this->template = new Template();
         $this->default_templatefiles = array();
         $this->session = new Session();
-        $this->db = Database::getCurrentDB();
+        $this->modelManager = new ModelManager();
+        //$this->db = Database::getCurrentDB();
     }
 
     /**
@@ -46,9 +48,18 @@ class Controller{
     /**
      * @return Database
      */
+    /*
     function getDB(){
         return $this->db;
+    }*/
+    /**
+     * @return ModelManager
+     */
+    protected function getModelManager()
+    {
+        return $this->modelManager;
     }
+
     /**
      *
      */

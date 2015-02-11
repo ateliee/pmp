@@ -56,7 +56,7 @@ function load_user_application($path){
         $libs_path = $path."/libs";
         // include model
         dir_include_all($libs_path."/model",function($file){
-            $model_name = ucfirst(pathinfo($file,PATHINFO_FILENAME));
+            $model_name = (pathinfo($file,PATHINFO_FILENAME));
             \PMP\ModelManager::add($model_name);
         });
         dir_include_all($libs_path."/include");

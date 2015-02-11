@@ -16,10 +16,10 @@ class RoutingRoule
     function __construct($url,$class='',$args=null,$requirements=array())
     {
         if(($args != null) && !is_array($args)){
-            throw new \Exception('args must be array.');
+            throw new \Exception('Args must be array.');
         }
         if(($requirements != null) && !is_array($requirements)){
-            throw new \Exception('requirements must be array.');
+            throw new \Exception('Requirements must be array.');
         }
         $this->url = $url;
         $this->query = null;
@@ -75,6 +75,23 @@ class RoutingRoule
     public function getArgs()
     {
         return $this->args;
+    }
+
+    /**
+     * @param $arr
+     * @return array
+     */
+    public function checkArgs($arr)
+    {
+        $keys = array();
+        if($this->args){
+            foreach($this->args as $key => $v){
+                if(!isset($arr[$key])){
+                    $keys[$key] = $key;
+                }
+            }
+        }
+        return $keys;
     }
 
     /**
@@ -166,6 +183,7 @@ class Routing
             throw new \Exception('not found roule '.$args[0]);
         }
         $format = $roule->getUrl();
+
         $replacement = array();
         if(isset($args[1])){
             if(is_array($args[1])){
@@ -176,6 +194,10 @@ class Routing
                 throw new \Exception('must be args 2 paramater is array.');
             }
         }
+        $url = strtr($format,$replacement);
+        if(preg_match_all('/{(.+)}/',$url,$matchs)){
+            throw new \Exception(sprintf('Args Key Not found "%s" params "%s".',$args[0],implode("\" and \"",$matchs[1])));
+        }
         $query = '';
         if(isset($args[2])){
             if(is_array($args[2])){
@@ -184,7 +206,7 @@ class Routing
                 throw new \Exception('must be args 3 paramater is array.');
             }
         }
-        return strtr($format,$replacement).($query ? '?'.$query : '');
+        return $url.($query ? '?'.$query : '');
     }
 
     /**
