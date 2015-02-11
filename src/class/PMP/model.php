@@ -80,7 +80,9 @@ class Model{
     private function getDBColumns(){
         $fields = array();
         foreach($this->table_fields as $key => $colum){
-            $fields[$key] = $colum->getDBColumn();
+            if(!$colum->isCompareColumn()){
+                $fields[$key] = $colum->getDBColumn();
+            }
         }
         return $fields;
     }
