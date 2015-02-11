@@ -295,7 +295,7 @@ class Model_Query
     public function getResultOne($default=null)
     {
         if($results = $this->getArrayResult()){
-            return reset($results[0]);
+            return reset($results);
         }
         return $default;
     }
