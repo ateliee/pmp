@@ -191,7 +191,7 @@ class File{
         if(!$mode){
             $this->error('must be paramater "mode".');
         }
-        if($this->fp = fopen($filename,$mode)){
+        if($this->fp = @fopen($filename,$mode)){
             $this->mode = $mode;
             $this->contents = '';
             if(flock($this->fp,LOCK_EX)){
