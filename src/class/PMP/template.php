@@ -1238,6 +1238,12 @@ class Template {
                 case 'floatval':
                     $result = floatval($params[0]);
                     break;
+                case 'implode':
+                    $result = implode($params[0],$params[1]);
+                    break;
+                case 'explode':
+                    $result = explode($params[0],$params[1]);
+                    break;
                 case 'upper':
                     $result = strtoupper($params[0]);
                     break;
