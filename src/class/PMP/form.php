@@ -371,7 +371,7 @@ class FormElement{
                 }else if(is_callable($options)){
                     $list = $options();
                 }
-                $html = new htmlElement('select',$html_attr);
+                $html = new htmlElement('select',$html_attr,null,false);
                 foreach($list as $k => $v){
                     $opt = array();
                     if($value == $k){
