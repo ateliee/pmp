@@ -59,12 +59,12 @@ PMP\Template::filter("path",function(){
  */
 \PMP\Template::filter('form_start',function(\PMP\Template $template,$form,$options){
     if($form instanceof \PMP\FormView){
-        $params = array(
+        $params = array_merge(array(
             'action' => $form->getUrl(),
             'method' => 'POST',
-        );
+        ),$options);
         $attr = array();
-        foreach($options as $key => $val){
+        foreach($params as $key => $val){
             $attr[$key] = $val;
         }
         $attr_tag = array();
