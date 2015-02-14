@@ -292,13 +292,20 @@ class Model{
     public function set($key,$val,$method_call = true,$db_data=false)
     {
         if(is_string($key)){
+            $column = $this->getColumn($key);
+            if(in_array($column->getType(),array(ModelColumn::$TYPE_DATE))){
+                $val = new \PMP\Date($val);
+            }else if(in_array($column->getType(),array(ModelColumn::$TYPE_DATETIME,ModelColumn::$TYPE_TIMESTAMP))){
+                $val = new \PMP\DateTime($val);
+            }
+
             $method = "set".ucfirst($key);
             if($method_call && method_exists($this,$method)){
                 $this->$method($val);
             }else if(property_exists($this,$key)){
                 if($db_data){
-                    $val = $this->table_fields[$key]->getConvertValue($val);
-                    if($this->table_fields[$key]->getType() == ModelColumn::$TYPE_ARRAY){
+                    $val = $column->getConvertValue($val);
+                    if($column->getType() == ModelColumn::$TYPE_ARRAY){
                         $v = array();
                         if($val != ''){
                             $arr = explode(self::$DB_ARRAY_SPACER,$val);
@@ -309,7 +316,7 @@ class Model{
                             }
                         }
                         $this->{$key} = $v;
-                    }else if($this->table_fields[$key]->getType() == ModelColumn::$TYPE_DATA){
+                    }else if($column->getType() == ModelColumn::$TYPE_DATA){
                         $v = null;
                         if($val){
                             $v = unserialize($val);
