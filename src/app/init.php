@@ -62,21 +62,11 @@ PMP\Template::filter("path",function(){
         $params = array(
             'action' => $form->getUrl(),
             'method' => 'POST',
-            'attr' => array()
         );
-        foreach($options as $key => $val){
-            if(!array_key_exists($key,$params)){
-                throw new \PMP\PMPException(
-                    sprintf('form_start() option "%s" not Support. param is %s',$key,implode(' or ',array_keys($params)))
-                );
-            }
-            $params[$key] = $val;
-        }
         $attr = array();
-        $attr['action'] = $params['action'];
-        $attr['method'] = $params['method'];
-        $attr = array_merge($attr,$params['attr']);
-
+        foreach($options as $key => $val){
+            $attr[$key] = $val;
+        }
         $attr_tag = array();
         foreach($attr as $key => $val){
             $attr_tag[] = ' '.$key.'="'.$val.'"';
@@ -99,7 +89,7 @@ PMP\Template::filter("path",function(){
         foreach($options as $key => $val){
             if(!array_key_exists($key,$params)){
                 throw new \PMP\PMPException(
-                    sprintf('form_end() option "%s" not Support. param is %s',$key,implode(' or ',array_keys($params)))
+                    sprintf('form_end() option "%s" not Support. param is [%s]',$key,implode(' or ',array_keys($params)))
                 );
             }
             $params[$key] = $val;
