@@ -7,26 +7,38 @@ namespace PMP;
  */
 class RoutingRoule
 {
+    private $name;
     private $url;
-    private $query;
     private $class;
-    private $args;
+    private $defaults;
     private $requirements;
 
-    function __construct($url,$class='',$args=null,$requirements=array())
+    private $url_pattern;
+    private $url_params;
+    private $url_params_num;
+
+    function __construct($url,$class='',$defaults=array(),$requirements=array())
     {
-        if(($args != null) && !is_array($args)){
-            throw new \Exception('Args must be array.');
+        if(($defaults != null) && !is_array($defaults)){
+            throw new \Exception('Default Must Be Array.');
         }
         if(($requirements != null) && !is_array($requirements)){
-            throw new \Exception('Requirements must be array.');
+            throw new \Exception('Requirements Must Be Array.');
         }
         $this->url = $url;
-        $this->query = null;
         $this->class = $class;
-        $this->args = $args;
+        $this->defaults = $defaults;
         $this->requirements = $requirements;
     }
+
+    /**
+     * @param mixed $name
+     */
+    public function setName($name)
+    {
+        $this->name = $name;
+    }
+
 
     /**
      * @param mixed $url
@@ -34,6 +46,9 @@ class RoutingRoule
     public function setUrl($url)
     {
         $this->url = $url;
+        $this->url_pattern = null;
+        $this->url_params = null;
+        $this->url_params_num = null;
     }
 
     /**
@@ -45,53 +60,11 @@ class RoutingRoule
     }
 
     /**
-     * @param null $query
-     */
-    public function setQuery($query)
-    {
-        $this->query = $query;
-    }
-
-
-    /**
-     * @return null
-     */
-    public function getQuery()
-    {
-        return $this->query;
-    }
-
-    /**
      * @return string
      */
     public function getClass()
     {
         return $this->class;
-    }
-
-    /**
-     * @return null
-     */
-    public function getArgs()
-    {
-        return $this->args;
-    }
-
-    /**
-     * @param $arr
-     * @return array
-     */
-    public function checkArgs($arr)
-    {
-        $keys = array();
-        if($this->args){
-            foreach($this->args as $key => $v){
-                if(!isset($arr[$key])){
-                    $keys[$key] = $key;
-                }
-            }
-        }
-        return $keys;
     }
 
     /**
@@ -102,6 +75,96 @@ class RoutingRoule
         return $this->requirements;
     }
 
+    /**
+     * @throws PMPException
+     */
+    private function createParamsVars()
+    {
+        if(!$this->url_pattern){
+            $preg_str = preg_quote($this->url,'/');
+
+            $this->url_params = array();
+            $this->url_params_num = array();
+
+            if(preg_match_all('/{(.+)}/',$this->url,$matchs)){
+                $replacement_params = array();
+                $replacement_nums = array();
+                foreach($matchs[1] as $key){
+                    $replacement_params[$key] = '(.+)';
+                    $replacement_nums[] = $key;
+                }
+                foreach($this->requirements as $key => $val){
+                    if(!array_key_exists($key,$replacement_params)){
+                        throw new PMPException(sprintf('Routing "%s" is Requirements param "%s" must be url.',$this->name,$key));
+                    }
+                    $replacement_params[$key] = '('.$val.')';
+                }
+
+                foreach($replacement_params as $key => $val){
+                    $preg_str = str_replace(preg_quote('{'.$key.'}','/'),$val,$preg_str);
+                }
+                $this->url_params = $replacement_params;
+                $this->url_params_num = $replacement_nums;
+            }
+            $this->url_pattern = $preg_str;
+        }
+    }
+
+    /**
+     * @param $url
+     * @return array
+     * @throws PMPException
+     */
+    public function checkUrl($url){
+        $this->createParamsVars();
+        if(preg_match('/'.$this->url_pattern.'/',$url,$matchs)){
+            $params = array();
+            foreach($this->defaults as $key => $val){
+                $params[$key] = $val;
+            }
+            foreach($this->url_params_num as $num => $key){
+                $params[$key] = $matchs[$num + 1];
+            }
+            return $params;
+        }
+        return array();
+    }
+
+    /**
+     * @param array $params
+     * @return string
+     * @throws PMPException
+     */
+    public function generateUrl($params=array())
+    {
+        $this->createParamsVars();
+
+        $p = array();
+        $query = array();
+        foreach($params as $key => $val){
+            if(in_array($key,$this->url_params_num)){
+                $p['{'.$key.'}'] = $val;
+            }else{
+                $query[$key] = $val;
+            }
+        }
+        if(count($p) != count($this->url_params_num)){
+            $less = array();
+            foreach($this->url_params_num as $key){
+                if(!isset($p['{'.$key.'}'])){
+                    $less[] = $key;
+                }
+            }
+            throw new PMPException(sprintf('generateUrl(%s) Must Be "%s" Paramater.',$this->name,implode(' and ',$less)));
+        }
+        if(!($url = strstr($this->url,$p))){
+            $url = $this->url;
+        }
+        if(count($query) > 0){
+            $url .= '?'.http_build_query($query);
+        }
+        return $url;
+    }
 }
 
 /**
@@ -145,6 +208,7 @@ class Routing
                 $name = $this->prex.$name;
             }
             $roule->setUrl($this->prex_url.$roule->getUrl());
+            $roule->setName($name);
         }
         self::$roules[$name] = $roule;
     }
@@ -169,44 +233,27 @@ class Routing
     }*/
 
     /**
-     * @param roule name
-     * @param format args
      * @return string
+     * @throws PMPException
      */
     static function generateUrl(){
         $args = func_get_args();
         if(count($args) <= 0){
-            throw new \Exception('must be args 1 paratameter.');
+            throw new PMPException('Must Be Args 1 Paratameter.');
         }
         $roule = self::getRoule($args[0]);
         if(!$roule){
-            throw new \Exception('not found roule '.$args[0]);
+            throw new PMPException('Not Found Roule '.$args[0]);
         }
-        $format = $roule->getUrl();
-
-        $replacement = array();
+        $params = array();
         if(isset($args[1])){
             if(is_array($args[1])){
-                foreach($args[1] as $key => $val){
-                    $replacement["{".$key."}"] = $val;
-                }
+                $params = $args[1];
             }else{
-                throw new \Exception('must be args 2 paramater is array.');
+                throw new PMPException('Must Be Args 2 Paramater is Array.');
             }
         }
-        $url = strtr($format,$replacement);
-        if(preg_match_all('/{(.+)}/',$url,$matchs)){
-            throw new \Exception(sprintf('Args Key Not found "%s" params "%s".',$args[0],implode("\" and \"",$matchs[1])));
-        }
-        $query = '';
-        if(isset($args[2])){
-            if(is_array($args[2])){
-                $query = http_build_query($args[2]);
-            }else{
-                throw new \Exception('must be args 3 paramater is array.');
-            }
-        }
-        return $url.($query ? '?'.$query : '');
+        return $roule->generateUrl($params);
     }
 
     /**
@@ -219,67 +266,15 @@ class Routing
     }
 
     /**
-     * @param $key
-     * @return null
-     */
-    static protected function getPreg($key){
-        if(isset(self::$roules[$key])){
-            $roule = self::getRoule($key);
-            $replacement = array();
-            foreach($roule->getRequirements() as $key => $val){
-                $replacement["\{".$key."\}"] = "(".$val.")";
-            }
-            return strtr(preg_quote($roule->getUrl(),"/"),$replacement);
-        }
-        return null;
-    }
-
-    /**
      * url to class name
      */
-    static public function getRouleClass($url,$query=array()){
+    static public function getRouleClass($url){
         foreach(self::$roules as $key => $val){
-            if(preg_match("/^".self::getPreg($key)."$/",$url,$matchs)){
-                /*if(isset($val["rule"]["query"])){
-                    foreach($val["rule"]["query"] as $k => $v){
-                        if(!(isset($query[$k]) && preg_match("/^".($v)."$/",$query[$k],$mt))){
-                            continue 2;
-                        }
-                    }
-                }*/
-                $q = null;
-                if($val->getArgs()){
-                    $q = array();
-                    $args = $val->getArgs();
-                    foreach($args as $key => $v){
-                        $q[$key] = $v;
-                    }
-                    /*foreach($q as $k => $v){
-                        if(preg_match("/^(.*)%([0-9]*)(.*)$/",$v,$mt)){
-                            $vv = $mt[1];
-                            if(isset($matchs[$mt[2]])){
-                                $vv .= $matchs[$mt[2]];
-                            }
-                            $vv .= $mt[3];
-                            $q[$k] = $vv;
-                        }
-                    }*/
-                }
-                $url = $val->getUrl();
-                $replacement = array();
-                if(preg_match_all("/\{(.+?)\}/",$url,$mt)){
-                    foreach($mt[0] as $k => $v){
-                        $arg_key = $k + 1;
-                        $replacement[$v] = $matchs[$arg_key];
-                    }
-                    foreach($q as $k => $v){
-                        $q[$k] = strtr($v,$replacement);
-                    }
-                }
+            if($params = $val->checkUrl($url)){
                 return array(
                     "name" => $key,
                     "class" => $val->getClass(),
-                    "param" => $q,
+                    "param" => $params,
                 );
             }
         }

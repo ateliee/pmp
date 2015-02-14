@@ -199,50 +199,61 @@ class Application{
             }
         }
         $routing = new Routing();
-        if(!$data = $routing::getRouleClass($request->getUri(),$request->getQuery())){
-            if($data = $routing::getRouleClass($request->getUri()."/",$request->getQuery())){
-                Server::redirect(Application::getBaseUrl().$request->getUri()."/");
+        if(!$data = $routing::getRouleClass($request->getUri())){
+            if($data = $routing::getRouleClass($request->getUri().'/')){
+                Server::redirect(Application::getBaseUrl().$request->getUri().'/');
             }
         }
         if(empty($data)){
-            $data = array("class" => "core:default:error_404");
-        }else if($data["class"] == ""){
-            $data = array("class" => "core:default:index");
+            $data = array('class' => 'core:default:error_404');
+        }else if($data['class'] == ''){
+            $data = array('class' => 'core:default:index');
         }
         // pearse class method
-        if(preg_match("/^([0-9a-zA-Z\-_]+):([0-9a-zA-Z\-_]+):?([0-9a-zA-Z\-_]*)$/",$data["class"],$matchs)){
+        if(preg_match("/^([0-9a-zA-Z\-_]+):([0-9a-zA-Z\-_]+):?([0-9a-zA-Z\-_]*)$/",$data['class'],$matchs)){
             $project = $matchs[1];
             $class = $matchs[2];
             $method = $matchs[3];
             $method = (!empty($method)) ? $method : "index";
         }else{
-            throw new PMPException('Error Class Method or Class Name(`'.$data["class"].'` is not routing find).');
+            throw new PMPException('Error Class Method or Class Name(`'.$data['class'].'` is not routing find).');
         }
         $benchmark->setMark("routing");
         try{
-            $path = self::$source_dir."/".$project;
-            $filename = $path."/conf";
+            $path = self::$source_dir.'/'.$project;
+            $filename = $path.'/conf';
             dir_include_all($filename);
-            $filename = $path."/class";
+            $filename = $path.'/class';
             dir_include_all($filename);
 
-            $filename = $path."/controller/".$class.".php";
+            $filename = $path.'/controller/'.$class.'.php';
             if(file_exists($filename)){
                 include_once($filename);
             }else{
-                $path = dirname(__FILE__)."/../../component";
-                $filename = $path."/controller/".$class.".php";
+                $path = dirname(__FILE__).'/../../component';
+                $filename = $path.'/controller/'.$class.'.php';
                 if(file_exists($filename)){
                     include_once($filename);
                 }
             }
-            $classname = $class."Controller";
+            $classname = $class.'Controller';
             $controller = new $classname($path,$class,$method,$project);
             $controller->addDefaultTemplatefiles(dirname(__FILE__).'/../../component/view/form.tpl');
 
-            $benchmark->setMark("included");
-            if(isset($data["param"])){
-                call_user_func_array(array($controller,$method), $data["param"]);
+            $benchmark->setMark('included');
+            if(isset($data['param'])){
+                $reflection = new \ReflectionClass($controller);
+                $reflection_method = $reflection->getMethod($method);
+
+                $params = array();
+                foreach($reflection_method->getParameters() as $key => $p){
+                    if(array_key_exists($p->getName(),$data['param'])){
+                        $params[$key] = $data['param'][$p->getName()];
+                    }else{
+                        throw new PMPException(sprintf('Not Found Controller Paramater %s',$p->getName()));
+                    }
+                }
+                call_user_func_array(array($controller,$method), $params);
             }else{
                 $controller->$method();
             }
@@ -256,17 +267,17 @@ class Application{
 
 }
 
-{
-    $rootdir = dirname(__FILE__).'/../../../../../..';
-    $hostname = isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : '';
-    if(isset($_SERVER['SERVER_PORT']) && !in_array($_SERVER['SERVER_PORT'],array(80,443))){
-        $hostname .= ':'.$_SERVER['SERVER_PORT'];
-    }
-    $documentroot = preg_replace('/^'.preg_quote($_SERVER['DOCUMENT_ROOT'],'/').'/','',realpath($rootdir));
+    {
+        $rootdir = dirname(__FILE__).'/../../../../../..';
+        $hostname = isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : '';
+        if(isset($_SERVER['SERVER_PORT']) && !in_array($_SERVER['SERVER_PORT'],array(80,443))){
+            $hostname .= ':'.$_SERVER['SERVER_PORT'];
+        }
+        $documentroot = preg_replace('/^'.preg_quote($_SERVER['DOCUMENT_ROOT'],'/').'/','',realpath($rootdir));
 
-    Application::setRootDir($rootdir);
-    Application::setBaseUrl($documentroot);
-    Application::setWebUrl($documentroot.'/web');
-    Application::setHostname(isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '');
-    Application::setHostname(isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '');
-}
+        Application::setRootDir($rootdir);
+        Application::setBaseUrl($documentroot);
+        Application::setWebUrl($documentroot.'/web');
+        Application::setHostname(isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '');
+        Application::setHostname(isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '');
+    }

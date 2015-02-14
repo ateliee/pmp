@@ -117,7 +117,7 @@ class Controller{
             }else{
                 throw new PMPException('File Not Found(`'.$this->path.'/view/'.$filename.'`).');
             }
-        }catch(PHPException $e){
+        }catch(PMPException $e){
             $e->displayError();
             return false;
         }
