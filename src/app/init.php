@@ -120,7 +120,13 @@ PMP\Template::filter("path",function(){
     return implode('',$tags);
 },true);
 \PMP\Template::filter('form_row',function(\PMP\Template $template,$form,$attr=array()){
-    $tag = $template->callFilter('form_label',$form);
+    if(!($form instanceof \PMP\FormElement)){
+        throw new \PMP\PMPException('form_label() paramater is not instanceof FormElement.');
+    }
+    $tag = '';
+    if($form->getType() != \PMP\FormElement::$TYPE_HIDDEN){
+        $tag .= $template->callFilter('form_label',$form);
+    }
     $tag .= $template->callFilter('form_wedget',$form,$attr);
     return $tag;
 },true);
@@ -169,7 +175,7 @@ PMP\Template::filter("path",function(){
     }
     return $tag;
 },true);
-\PMP\Template::filter('form_rest',function($form){
+\PMP\Template::filter('form_rest',function(\PMP\Template $template,$form){
     if(!($form instanceof \PMP\FormView)){
         throw new \PMP\PMPException('form_rest() paramater is not instanceof FormView.');
     }
@@ -179,11 +185,11 @@ PMP\Template::filter("path",function(){
             continue;
         }
         if(!$val->getOutput()){
-            $output .= $val->getTag();
+            $output .= $template->callFilter('form_row',$val);
         }
     }
     return $output;
-});
+},true);
 \PMP\Template::filter('form_errors',function(\PMP\Template $template,$form){
     if(!($form instanceof \PMP\FormView)){
         throw new \PMP\PMPException('form_errors() paramater is not instanceof FormView.');
