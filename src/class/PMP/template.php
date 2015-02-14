@@ -1,10 +1,10 @@
 <?php
 namespace PMP;
 
-    /**
-     * Class Template v1
-     * support mysql
-     */
+/**
+ * Class Template v1
+ * support mysql
+ */
 # TODO : PHP template convert
 # TODO : cache create
 
@@ -1003,21 +1003,25 @@ class Template {
                 $key = $m[1];
                 if (isset($result)) {
                     if(is_object($result)) {
+                        $public_property = get_object_vars($result);
                         if($class_name = get_class($result)){
                             $get_key = 'get'.ucfirst($key);
-                            if(is_callable(array($result,$key))){
+                            if(array_key_exists($key,$public_property)){
+                                $result = $result->$key;
+                            }else if(is_callable(array($result,$key))){
                                 $result = $result->$key();
                             }else if(is_callable(array($result,$get_key))){
                                 $result = $result->$get_key();
-                            }else if(property_exists($result,$key)){
+                            }else if(is_callable(array($result,'__get'))){
                                 $result = $result->$key;
                             }else{
-                                $this->error(sprintf("Not Found Func Or Property [%s] in %s;",$class_name,$key));
+                                $this->error(sprintf("Not Found Func Or Property [%s] in %s;",$class_name,$str));
                             }
                         }else{
-                            if(property_exists($result,$key)){
+                            if(array_key_exists($key,$public_property)){
                                 $result = $result->$key;
                             }else{
+                                //$result = $result->$key;
                                 $this->error(sprintf("Not Found Func Or Property [%s] in %s;",$str,$key));
                             }
                         }

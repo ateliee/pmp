@@ -438,11 +438,11 @@ class FormElement{
 class FormView
 {
     private $elem;
-    private $url;
+    private $_url;
 
     function __construct($url)
     {
-        $this->url = $url;
+        $this->_url = $url;
         $this->elem = array();
     }
 
@@ -466,9 +466,9 @@ class FormView
     /**
      * @return mixed
      */
-    public function getUrl()
+    public function getFormActionUrl()
     {
-        return $this->url;
+        return $this->_url;
     }
 
     /**

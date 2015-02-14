@@ -60,7 +60,7 @@ PMP\Template::filter("path",function(){
 \PMP\Template::filter('form_start',function(\PMP\Template $template,$form,$options){
     if($form instanceof \PMP\FormView){
         $params = array_merge(array(
-            'action' => $form->getUrl(),
+            'action' => $form->getFormActionUrl(),
             'method' => 'POST',
         ),$options);
         $attr = array();
@@ -121,7 +121,7 @@ PMP\Template::filter("path",function(){
 },true);
 \PMP\Template::filter('form_row',function(\PMP\Template $template,$form,$attr=array()){
     if(!($form instanceof \PMP\FormElement)){
-        throw new \PMP\PMPException('form_label() paramater is not instanceof FormElement.');
+        throw new \PMP\PMPException('form_row() paramater is not instanceof FormElement.');
     }
     $tag = '';
     if($form->getType() != \PMP\FormElement::$TYPE_HIDDEN){
@@ -159,7 +159,7 @@ PMP\Template::filter("path",function(){
 },true);
 \PMP\Template::filter('form_wedget',function(\PMP\Template $template,$form,$attr=array()){
     if(!($form instanceof \PMP\FormElement)){
-        throw new \PMP\PMPException('form_label() paramater is not instanceof Form.');
+        throw new \PMP\PMPException('form_wedget() paramater is not instanceof Form.');
     }
     $form->setOutput(true);
 
