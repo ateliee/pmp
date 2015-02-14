@@ -482,6 +482,15 @@ class Model{
     }
 
     /**
+     * @return ModelManager
+     */
+    public function getManager()
+    {
+        $mm = new ModelManager();
+        return $mm;
+    }
+
+    /**
      * @param $name
      * @return mixed
      */
@@ -494,11 +503,10 @@ class Model{
             if($this->isExists($name)){
                 $column = $this->getColumn($name);
                 if($column->isCompareColumn()){
-                    $target_name = $column->getTargetName();
                     $target_column = $column->getTargetColumn();
 
                     $mm = new ModelManager();
-                    $res = $mm->createQuery($target_name,'p')
+                    $res = $mm->createQuery($column->getName(),'p')
                         ->where('`p`.`'.$target_column.'`=:id')
                         ->setParamater('id',$this->getId())
                         ->getResults();

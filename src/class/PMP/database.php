@@ -746,6 +746,21 @@ class Database{
      * @param null $replace
      * @return array|null
      */
+    public function getFirstResult($prex=null,$replace=null){
+        if($this->result){
+            if($this->numRows() > 1){
+                $value = $this->fetchArray(self::QUERY_ASSOC);
+                return $this->replacePrex($value,$prex,$replace);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @param null $prex
+     * @param null $replace
+     * @return array|null
+     */
     public function getResult($prex=null,$replace=null){
         if($this->result){
             if($this->numRows() > 1){

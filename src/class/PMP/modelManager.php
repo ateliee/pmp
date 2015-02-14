@@ -262,12 +262,24 @@ class Model_Query
     }
 
     /**
-     *
+     * @return Model
      */
     public function getResult()
     {
         $model = new $this->model_name;
         if($results = $this->getArrayResult()){
+            $model->setArray($results);
+        }
+        return $model;
+    }
+
+    /**
+     * @return Model
+     */
+    public function getFirstResult()
+    {
+        $model = new $this->model_name;
+        if($results = $this->getArrayFirstResult()){
             $model->setArray($results);
         }
         return $model;
@@ -284,6 +296,14 @@ class Model_Query
     /**
      * @return array|null
      */
+    public function getArrayFirstResult()
+    {
+        return $this->executeQuery()->getFirstResult();
+    }
+
+    /**
+     * @return array|null
+     */
     public function getArrayResults()
     {
         return $this->executeQuery()->getResults();
@@ -295,7 +315,7 @@ class Model_Query
      */
     public function getResultOne($default=null)
     {
-        if($results = $this->getArrayResult()){
+        if($results = $this->getArrayFirstResult()){
             return reset($results);
         }
         return $default;
