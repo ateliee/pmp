@@ -86,22 +86,21 @@ class RoutingRoule
             $this->url_params = array();
             $this->url_params_num = array();
 
-            if(preg_match_all('/{(.+)}/',$this->url,$matchs)){
+            if(preg_match_all('/{(.+?)}/',$this->url,$matchs)){
                 $replacement_params = array();
                 $replacement_nums = array();
                 foreach($matchs[1] as $key){
                     $replacement_params[$key] = '(.+)';
                     $replacement_nums[] = $key;
                 }
-                foreach($this->requirements as $key => $val){
-                    if(!array_key_exists($key,$replacement_params)){
-                        throw new PMPException(sprintf('Routing "%s" is Requirements param "%s" must be url.',$this->name,$key));
-                    }
-                    $replacement_params[$key] = '('.$val.')';
-                }
 
                 foreach($replacement_params as $key => $val){
                     $preg_str = str_replace(preg_quote('{'.$key.'}','/'),$val,$preg_str);
+                }
+                foreach($this->requirements as $key => $val){
+                    if(!array_key_exists($key,$replacement_params)){
+                        throw new PMPException(sprintf('Routing "%s" is Requirements Param "%s" Must Be Url.',$this->name,$key));
+                    }
                 }
                 $this->url_params = $replacement_params;
                 $this->url_params_num = $replacement_nums;
@@ -112,12 +111,11 @@ class RoutingRoule
 
     /**
      * @param $url
-     * @return array
-     * @throws PMPException
+     * @return array|bool
      */
     public function checkUrl($url){
         $this->createParamsVars();
-        if(preg_match('/'.$this->url_pattern.'/',$url,$matchs)){
+        if(preg_match('/^'.$this->url_pattern.'$/',$url,$matchs)){
             $params = array();
             foreach($this->defaults as $key => $val){
                 $params[$key] = $val;
@@ -125,9 +123,15 @@ class RoutingRoule
             foreach($this->url_params_num as $num => $key){
                 $params[$key] = $matchs[$num + 1];
             }
+
+            foreach($this->requirements as $key => $val){
+                if(!preg_match('/'.$val.'/',$params[$key])){
+                    return array();
+                }
+            }
             return $params;
         }
-        return array();
+        return false;
     }
 
     /**
@@ -157,8 +161,11 @@ class RoutingRoule
             }
             throw new PMPException(sprintf('generateUrl(%s) Must Be "%s" Paramater.',$this->name,implode(' and ',$less)));
         }
-        if(!($url = strstr($this->url,$p))){
-            $url = $this->url;
+        $url = $this->url;
+        if($p && (count($p) > 0)){
+            foreach($p as $key => $val){
+                $url = str_replace($key,$val,$url);
+            }
         }
         if(count($query) > 0){
             $url .= '?'.http_build_query($query);
@@ -270,7 +277,7 @@ class Routing
      */
     static public function getRouleClass($url){
         foreach(self::$roules as $key => $val){
-            if($params = $val->checkUrl($url)){
+            if(($params = $val->checkUrl($url)) !== false){
                 return array(
                     "name" => $key,
                     "class" => $val->getClass(),
