@@ -627,7 +627,11 @@ class Form{
                     $ctype = FormElement::$TYPE_TEXTAREA;
                 }
             }else if($field->isInt()){
-                $ctype = FormElement::$TYPE_SELECT;
+                if(count($column->getChoices()) > 0){
+                    $ctype = FormElement::$TYPE_SELECT;
+                }else{
+                    $ctype = FormElement::$TYPE_TEXT;
+                }
             }else if($field->isFloat()){
                 $ctype = FormElement::$TYPE_TEXT;
             }else if($field->isDate()){
