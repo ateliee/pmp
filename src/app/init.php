@@ -81,7 +81,7 @@ PMP\Template::filter("path",function(){
 /**
  * form template function
  */
-\PMP\Template::filter('form_end',function(\PMP\Template $template,$form,$options){
+\PMP\Template::filter('form_end',function(\PMP\Template $template,$form,$options=array()){
     if($form instanceof \PMP\FormView){
         $params = array(
             'form_rest' => true,
@@ -97,7 +97,7 @@ PMP\Template::filter("path",function(){
 
         $tag = '';
         if($params['form_rest']){
-            $tag .= \PMP\Template::callFilter('form_rest',$form);
+            $tag .= $template->callFilter('form_rest',$form);
         }
         $tag .= '</form>';
         return $tag;
@@ -112,7 +112,7 @@ PMP\Template::filter("path",function(){
     $tags = array();
     if($form instanceof \PMP\FormView){
         foreach($form->getElement() as $key => $val){
-            $tags[] = \PMP\Template::callFilter('form_row',$val);
+            $tags[] = $template->callFilter('form_row',$val);
         }
     }else{
         throw new \PMP\PMPException('form_rows() paramater is not FormView.');
@@ -170,8 +170,11 @@ PMP\Template::filter("path",function(){
     return $tag;
 },true);
 \PMP\Template::filter('form_rest',function($form){
+    if(!($form instanceof \PMP\FormView)){
+        throw new \PMP\PMPException('form_rest() paramater is not instanceof FormView.');
+    }
     $output = '';
-    foreach($form as $key => $val){
+    foreach($form->getElement() as $key => $val){
         if(!($val instanceof \PMP\FormElement)){
             continue;
         }
@@ -182,6 +185,9 @@ PMP\Template::filter("path",function(){
     return $output;
 });
 \PMP\Template::filter('form_errors',function(\PMP\Template $template,$form){
+    if(!($form instanceof \PMP\FormView)){
+        throw new \PMP\PMPException('form_errors() paramater is not instanceof FormView.');
+    }
     $errors = array();
     if($form instanceof \PMP\FormView){
         foreach($form->getElement() as $key => $val){
