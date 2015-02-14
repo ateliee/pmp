@@ -432,6 +432,60 @@ class FormElement{
 }
 
 /**
+ * Class FormView
+ * @package PMP
+ */
+class FormView
+{
+    private $elem;
+    private $url;
+
+    function __construct($url)
+    {
+        $this->url = $url;
+        $this->elem = array();
+    }
+
+    /**
+     * @param $key
+     * @param FormElement $elm
+     */
+    public function add($key,FormElement $elm)
+    {
+        $this->elem[$key] = $elm;
+    }
+
+    /**
+     * @return array
+     */
+    public function getElement()
+    {
+        return $this->elem;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getUrl()
+    {
+        return $this->url;
+    }
+
+    /**
+     * @param $name
+     * @return null
+     */
+    function __get($name)
+    {
+        if(isset($this->elem[$name])){
+            return $this->elem[$name];
+        }
+        return null;
+    }
+
+}
+
+/**
  * Class Form
  * @package PMP
  */
@@ -581,13 +635,14 @@ class Form{
     }
 
     /**
-     * @return array
+     * @return FormView
      */
     public function getForm(){
-        $results = array();
+        $url = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
+        $results = new FormView($url);
         foreach($this->elem as $name => $value){
             $value->setName($name);
-            $results[$name] = $value;
+            $results->add($name,$value);
         }
         return $results;
     }

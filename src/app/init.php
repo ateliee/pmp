@@ -53,17 +53,79 @@ PMP\Template::filter("path",function(){
     $routing = new \PMP\Routing();
     return call_user_func_array(array($routing , 'getUrl'),func_get_args());
 });
+
+/**
+ * form template function
+ */
+\PMP\Template::filter('form_start',function(\PMP\Template $template,$form,$options){
+    if($form instanceof \PMP\FormView){
+        $params = array(
+            'action' => $form->getUrl(),
+            'method' => 'POST',
+            'attr' => array()
+        );
+        foreach($options as $key => $val){
+            if(!array_key_exists($key,$params)){
+                throw new \PMP\PMPException(
+                    sprintf('form_start() option "%s" not Support. param is %s',$key,implode(' or ',array_keys($params)))
+                );
+            }
+            $params[$key] = $val;
+        }
+        $attr = array();
+        $attr['action'] = $params['action'];
+        $attr['method'] = $params['method'];
+        $attr = array_merge($attr,$params['attr']);
+
+        $attr_tag = array();
+        foreach($attr as $key => $val){
+            $attr_tag[] = ' '.$key.'="'.$val.'"';
+        }
+
+        $tag = '<form'.implode('',$attr_tag).'>';
+        return $tag;
+    }else{
+        throw new \PMP\PMPException('form_start() 1 paramater is not FormView.');
+    }
+},true);
+/**
+ * form template function
+ */
+\PMP\Template::filter('form_end',function(\PMP\Template $template,$form,$options){
+    if($form instanceof \PMP\FormView){
+        $params = array(
+            'form_rest' => true,
+        );
+        foreach($options as $key => $val){
+            if(!array_key_exists($key,$params)){
+                throw new \PMP\PMPException(
+                    sprintf('form_end() option "%s" not Support. param is %s',$key,implode(' or ',array_keys($params)))
+                );
+            }
+            $params[$key] = $val;
+        }
+
+        $tag = '';
+        if($params['form_rest']){
+            $tag .= \PMP\Template::callFilter('form_rest',$form);
+        }
+        $tag .= '</form>';
+        return $tag;
+    }else{
+        throw new \PMP\PMPException('form_start() 1 paramater is not FormView.');
+    }
+},true);
 /**
  * form template function
  */
 \PMP\Template::filter('form_rows',function(\PMP\Template $template,$form){
     $tags = array();
-    if(is_array($form)){
-        foreach($form as $key => $val){
+    if($form instanceof \PMP\FormView){
+        foreach($form->getElement() as $key => $val){
             $tags[] = \PMP\Template::callFilter('form_row',$val);
         }
     }else{
-        throw new \PMP\PMPException('form_rows() paramater is not array.');
+        throw new \PMP\PMPException('form_rows() paramater is not FormView.');
     }
     return implode('',$tags);
 },true);
@@ -74,7 +136,7 @@ PMP\Template::filter("path",function(){
 },true);
 \PMP\Template::filter('form_label',function($form,$attr=array()){
     if(!($form instanceof \PMP\FormElement)){
-        throw new \PMP\PMPException('form_label() paramater is not instanceof Form.');
+        throw new \PMP\PMPException('form_label() paramater is not instanceof FormElement.');
     }
     $label = new htmlElement('label',
         array_merge($attr,array('for' => $form->getFormId())),htmlElement::escape($form->getFormLabel()),false);
@@ -131,12 +193,12 @@ PMP\Template::filter("path",function(){
 });
 \PMP\Template::filter('form_errors',function(\PMP\Template $template,$form){
     $errors = array();
-    if(is_array($form)){
-        foreach($form as $key => $val){
+    if($form instanceof \PMP\FormView){
+        foreach($form->getElement() as $key => $val){
             $errors[] = $template->callFilter('form_error',$val);
         }
     }else{
-        throw new \PMP\PMPException('form_errors() paramater is not array.');
+        throw new \PMP\PMPException('form_errors() paramater is not FormView.');
     }
     return implode('',$errors);
 },true);
