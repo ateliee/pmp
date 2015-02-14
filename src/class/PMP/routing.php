@@ -148,7 +148,7 @@ class RoutingRoule
         foreach($params as $key => $val){
             if(array_key_exists($key,$this->requirements)){
                 if(!preg_match('/^'.$this->requirements[$key].'$/',$val)){
-                    throw new PMPException(sprintf('generateUrl(%s) Must Be "%s" Paramater is "%s".',$key,$this->requirements[$key]));
+                    throw new PMPException(sprintf('generateUrl(%s) Must Be "%s" Paramater is "%s".',$this->name,$key,$this->requirements[$key]));
                 }
             }
             if(in_array($key,$this->url_params_num)){

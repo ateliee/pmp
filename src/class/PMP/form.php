@@ -389,8 +389,15 @@ class FormElement{
                         $id = $attr[FormElement::$ATTR_ATTR]['id'].'-'.$key;
                         $name = $this->getFormName().'[]';
                         $input_attr = array_merge($html_attr,array('type' => $type,'id' => $id,'name' => $name,'value' => $key));
-                        if(in_array($key,$value)){
-                            $input_attr['checked'] = 'checked';
+
+                        if(is_array($value)){
+                            if(in_array($key,$value)){
+                                $input_attr['checked'] = 'checked';
+                            }
+                        }else{
+                            if($key == $value){
+                                $input_attr['checked'] = 'checked';
+                            }
                         }
                         $html->addChilds(new htmlElement('input',$input_attr));
                         $html->addChilds(
