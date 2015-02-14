@@ -1,10 +1,10 @@
 <?php
 namespace PMP;
 
-/**
- * Class Template v1
- * support mysql
- */
+    /**
+     * Class Template v1
+     * support mysql
+     */
 # TODO : PHP template convert
 # TODO : cache create
 
@@ -1004,17 +1004,25 @@ class Template {
                 if (isset($result)) {
                     if(is_object($result)) {
                         if($class_name = get_class($result)){
-                            $get_key = 'get'.$key;
+                            $get_key = 'get'.ucfirst($key);
                             if(is_callable(array($result,$key))){
                                 $result = $result->$key();
-                            }else{
+                            }else if(is_callable(array($result,$get_key))){
+                                $result = $result->$get_key();
+                            }else if(property_exists($result,$key)){
                                 $result = $result->$key;
+                            }else{
+                                $this->error(sprintf("Not Found Func Or Property [%s] in %s;",$class_name,$key));
                             }
                         }else{
-                            $result = $result->$key;
+                            if(property_exists($result,$key)){
+                                $result = $result->$key;
+                            }else{
+                                $this->error(sprintf("Not Found Func Or Property [%s] in %s;",$str,$key));
+                            }
                         }
                     } else if (!array_key_exists($key, $result)) {
-                        $this->error("not found [" . $str . "] value;");
+                        $this->error("Not Found [" . $str . "] value;");
                         $result = NULL;
                     } else {
                         //$tmp_output[$key] = (is_array($value[$key])) ? array() : true;
@@ -1033,7 +1041,7 @@ class Template {
                     if (array_key_exists($key,$variables)) {
                         $result = $variables[$key];
                     }else{
-                        $this->error("not found value ".$str." in [" . $key . "] value;");
+                        $this->error("Not Found Value ".$str." in [" . $key . "] Value;");
                     }
                     if(isset($variables[$key]) && $set_output){
                         if(!isset($this->outputVars[$key])){
