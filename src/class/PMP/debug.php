@@ -23,8 +23,8 @@ class Debug{
     /**
      * @param $html
      */
-    public function appendRendarDebug(&$html){
-
+    public function appendRendarDebug(&$html)
+    {
         $tmp = <<< 'EOM'
 {strip}
 <style type="text/css">
