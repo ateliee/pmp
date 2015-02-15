@@ -331,6 +331,9 @@ class ModelColumn{
         );
         if(in_array($type,$types)){
             $this->type = $type;
+            if(in_array($type,array(self::$TYPE_MANY))){
+                $this->formenable = false;
+            }
         }else{
             throw new \Exception('not found ModelColumn type key "'.$type.'"');
         }

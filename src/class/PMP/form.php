@@ -726,122 +726,135 @@ class Form{
         if($this->request){
             $request = $this->request;
             $check_all = true;
+
             foreach($this->elem as $key => $val){
                 $error = new FormError();
                 $label = $val->getAttrValue(FormElement::$ATTR_LABEL,$key);
                 $form_key = $val->getPrex().$key;
 
-                $valuelist = array();
+                $value = null;
                 if($val->getIsArray()){
-                    $valuelist = $request->get($form_key,array());
-                    if(!is_array($valuelist)){
+                    $value = $request->get($form_key,array());
+                    if(!is_array($value)){
                         $error->add('array',$this->getErrorMessage('array',$label));
                     }
                 }else{
-                    $valuelist[] = $request->get($form_key,"");
+                    $value = $request->get($form_key,"");
                 }
-                foreach($valuelist as $value){
-                    if($val->getAttrValue(FormElement::$ATTR_REQUIRED,false) === true){
-                        if(!(($request->is($form_key)) && ($value != ""))){
-                            $error->add('required',$this->getErrorMessage('required',$label));
+                if($val->getAttrValue(FormElement::$ATTR_REQUIRED,false) === true){
+                    if(!(($request->is($form_key)) && ($value != ""))){
+                        $error->add('required',$this->getErrorMessage('required',$label));
+                    }
+                }
+                if($value != ""){
+                    if(($error->count() <= 0) && $val->getAttrValue(FormElement::$ATTR_FORMAT)){
+                        if(!preg_match("/^".$val->getAttrValue(FormElement::$ATTR_FORMAT)."$/",$value)){
+                            $error->add('format',$this->getErrorMessage('format',$label));
                         }
                     }
-                    if($value != ""){
-                        if(($error->count() <= 0) && $val->getAttrValue(FormElement::$ATTR_FORMAT)){
-                            if(!preg_match("/^".$val->getAttrValue(FormElement::$ATTR_FORMAT)."$/",$value)){
-                                $error->add('format',$this->getErrorMessage('format',$label));
-                            }
+                }
+                if(($request->is($form_key)) && ($value != "")){
+                    if($val->getType() == FormElement::$TYPE_EMAIL){
+                        if(!$this->checkMail($value)){
+                            $error->add('email',$this->getErrorMessage('email',$label));
+                        }
+                    }else if($val->getType() == FormElement::$TYPE_URL){
+                        if(!$this->checkURL($value)){
+                            $error->add('url',$this->getErrorMessage('url',$label));
+                        }
+                    }else if($val->getType() == FormElement::$TYPE_DATE){
+                        if(!$this->checkDateString($value)){
+                            $error->add('date',$this->getErrorMessage('date',$label));
+                        }
+                    }else if($val->getType() == FormElement::$TYPE_DATETIME){
+                        if(!$this->checkDateTimeString($value)){
+                            $error->add('datetime',$this->getErrorMessage('datetime',$label));
+                        }
+                    }else if($val->getType() == FormElement::$TYPE_TIME){
+                        if(!$this->checkTimeString($value)){
+                            $error->add('time',$this->getErrorMessage('time',$label));
+                        }
+                    }else if($val->getType() == FormElement::$TYPE_PASSWORD){
+                        if(!preg_match("/^([0-9a-zA-Z]*)$/",$value)){
+                            $error->add('password',$this->getErrorMessage('password',$label));
                         }
                     }
-                    if(($request->is($form_key)) && ($value != "")){
-                        if($val->getType() == FormElement::$TYPE_EMAIL){
-                            if(!$this->checkMail($value)){
-                                $error->add('email',$this->getErrorMessage('email',$label));
-                            }
-                        }else if($val->getType() == FormElement::$TYPE_URL){
-                            if(!$this->checkURL($value)){
-                                $error->add('url',$this->getErrorMessage('url',$label));
-                            }
-                        }else if($val->getType() == FormElement::$TYPE_DATE){
-                            if(!$this->checkDateString($value)){
-                                $error->add('date',$this->getErrorMessage('date',$label));
-                            }
-                        }else if($val->getType() == FormElement::$TYPE_DATETIME){
-                            if(!$this->checkDateTimeString($value)){
-                                $error->add('datetime',$this->getErrorMessage('datetime',$label));
-                            }
-                        }else if($val->getType() == FormElement::$TYPE_TIME){
-                            if(!$this->checkTimeString($value)){
-                                $error->add('time',$this->getErrorMessage('time',$label));
-                            }
-                        }else if($val->getType() == FormElement::$TYPE_PASSWORD){
-                            if(!preg_match("/^([0-9a-zA-Z]*)$/",$value)){
-                                $error->add('password',$this->getErrorMessage('password',$label));
-                            }
-                        }
-                        if(($error->count() <= 0) && $val->getAttrValue(FormElement::$ATTR_CHOICES)){
-                            $choices = $val->getAttrValue(FormElement::$ATTR_CHOICES);
-                            $c = true;
-                            if(is_array($choices) && !isset($choices[$value])){
-                                $c = false;
-                            }else if(is_object($choices) && ($choices instanceof Model)){
-                                if(!$choices->findQuery(intval($value))->getResults()){
-                                    $c = false;
-                                }
-                            }else if(is_callable($choices)){
-                                $c = $choices();
-                                if(!isset($c[$value])){
-                                    $c = false;
-                                }
-                            }
-                            if(!$c){
-                                $error->add('choices',$this->getErrorMessage('choices',$label));
-                            }
-                        }
-                    }
-                    if($error->count() <= 0){
-                        if($this->models){
-                            foreach($this->models as $k => $v){
-                                if($v->isExists($key)){
-                                    $column = $v->getColumn($key);
-                                    if($column->getDBColumn()->isUnique()){
-                                        if($res = $v->findQuery(array($key => $value))->getResults()){
-                                            $idv = $request->get($val->getPrex().'id',null);
-                                            foreach($res as $rk => $rv){
-                                                if($idv && isset($rv['id']) && ($rv['id'] == $idv)){
-                                                    continue;
-                                                }
-                                                $error->add('unique',$this->getErrorMessage('unique',$label));
-                                                break;
-                                            }
-                                        }
+                    if(($error->count() <= 0) && $val->getAttrValue(FormElement::$ATTR_CHOICES)){
+                        $choices = $val->getAttrValue(FormElement::$ATTR_CHOICES);
+                        $c = true;
+                        if(is_array($choices)){
+                            if(is_array($value)){
+                                foreach($value as $ck => $cv){
+                                    if(!array_key_exists($cv,$choices)){
+                                        $c = false;
+                                        break;
                                     }
-                                    if($column->getConnection()){
-                                        $taget_class = $column->getConnection()->getTargetName();
-                                        $target = new $taget_class();
-                                        if(!$target->find(array($column->getConnection()->getTargetColumn() => $value))){
+                                }
+                            }else if(!isset($choices[$value])){
+                                $c = false;
+                            }
+                        }else if(is_object($choices) && ($choices instanceof Model)){
+                            if(!$choices->findQuery(intval($value))->getResults()){
+                                $c = false;
+                            }
+                        }else if(is_callable($choices)){
+                            $c = $choices();
+                            if(!isset($c[$value])){
+                                $c = false;
+                            }
+                        }
+                        if(!$c){
+                            $error->add('choices',$this->getErrorMessage('choices',$label));
+                        }
+                    }
+                }
+                if($error->count() <= 0){
+                    if($this->models){
+                        foreach($this->models as $k => $v){
+                            if($v->isExists($key)){
+                                $column = $v->getColumn($key);
+                                if(!$column->getNullable()){
+                                    if($column->getType() == ModelColumn::$TYPE_ARRAY){
+                                        if(count($value) <= 0){
                                             $error->add('required',$this->getErrorMessage('required',$label));
                                         }
                                     }
-                                    if(!$val->getIsArray()){
-                                        $v->set($key,$value);
+                                }
+                                if($column->getDBColumn()->isUnique()){
+                                    if($res = $v->findQuery(array($key => $value))->getResults()){
+                                        $idv = $request->get($val->getPrex().'id',null);
+                                        foreach($res as $rk => $rv){
+                                            if($idv && isset($rv['id']) && ($rv['id'] == $idv)){
+                                                continue;
+                                            }
+                                            $error->add('unique',$this->getErrorMessage('unique',$label));
+                                            break;
+                                        }
                                     }
                                 }
+                                if($column->getConnection()){
+                                    $taget_class = $column->getConnection()->getTargetName();
+                                    $target = new $taget_class();
+                                    if(!$target->find(array($column->getConnection()->getTargetColumn() => $value))){
+                                        $error->add('required',$this->getErrorMessage('required',$label));
+                                    }
+                                }
+                                $v->set($key,$value);
                             }
                         }
                     }
-                    if($error->count() > 0){
-                        $val->setError($error);
-                        $check_all = false;
-                    }
                 }
-                if($val->getIsArray()){
+                if($error->count() > 0){
+                    $val->setError($error);
+                    $check_all = false;
+                }
+                /*if($val->getIsArray()){
                     foreach($this->models as $k => $v){
                         if($v->isExists($key)){
                             $v->set($key,$valuelist);
                         }
                     }
-                }
+                }*/
             }
             return $check_all;
         }
@@ -886,6 +899,7 @@ class Form{
                 return __('%1$s is exists.',$key);
                 break;
             default:
+                throw new \Exception(sprintf('Not Found Error Message "%s"',$type));
                 break;
         }
     }

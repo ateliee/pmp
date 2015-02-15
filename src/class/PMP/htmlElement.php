@@ -110,11 +110,11 @@ class htmlElement{
         if(count($this->attr) > 0){
             $attr_list = array();
             foreach($this->attr as $key => $val){
-                if(is_bool($val) && $val === true){
-                    $attr_list[] = $key;
-                }else{
+                //if(is_bool($val) && $val === true){
+                    //$attr_list[] = $key;
+                //}else{
                     $attr_list[] = $key.'='.self::$spacer.preg_replace('/'.self::$spacer.'/','\\'.self::$spacer,$val).self::$spacer;
-                }
+                //}
             }
             $tag .= ' '.implode(' ',$attr_list);
         }

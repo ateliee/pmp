@@ -110,7 +110,7 @@ class Model{
      * @return bool
      */
     public function isExists($key){
-        return (isset($this->table_fields[$key]) ? true : false);
+        return (array_key_exists($key,$this->table_fields) ? true : false);
     }
 
     /**
@@ -194,7 +194,11 @@ class Model{
             if($vv instanceof Model){
                 $columns[$k] = $vv->getId();
             }else if($v->getType() == ModelColumn::$TYPE_ARRAY){
-                $columns[$k] = self::$DB_ARRAY_SPACER.implode(self::$DB_ARRAY_SPACER,$vv).self::$DB_ARRAY_SPACER;
+                if(count($vv) > 0){
+                    $columns[$k] = self::$DB_ARRAY_SPACER.implode(self::$DB_ARRAY_SPACER,$vv).self::$DB_ARRAY_SPACER;
+                }else{
+                    $columns[$k] = null;
+                }
             }else if($v->getType() == ModelColumn::$TYPE_DATA){
                 $columns[$k] = serialize($vv);
             }else{
@@ -506,7 +510,7 @@ class Model{
                     $target_column = $column->getTargetColumn();
 
                     $mm = new ModelManager();
-                    $res = $mm->createQuery($column->getName(),'p')
+                    $res = $mm->createQuery($column->getTargetName(),'p')
                         ->where('`p`.`'.$target_column.'`=:id')
                         ->setParamater('id',$this->getId())
                         ->getResults();

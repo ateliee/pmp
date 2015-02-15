@@ -1262,9 +1262,9 @@ class Database{
             $sql_vals = array();
             $params = array("TABLE" => $table_name);
             foreach($fields as $k => $v){
-                if(!$v && !$columns[$k]->getAi() && !$columns[$k]->getDefault()){
-                    continue;
-                }
+                //if(!$v && !$columns[$k]->getAi() && !$columns[$k]->getDefault()){
+                    //continue;
+                //}
                 $sql_vals[] = $this->escapeColumn($k)."=".$this->convertColumn($v,$columns[$k])."";
             }
             $sql = "UPDATE ".$this->escapeColumn(":TABLE")." SET ".implode(",",$sql_vals)." ";
