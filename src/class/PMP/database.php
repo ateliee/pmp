@@ -657,7 +657,7 @@ class Database{
                         $type = MYSQL_BOTH;
                         break;
                 }
-                return mysql_fetch_array($this->result, $type);
+                $results = mysql_fetch_array($this->result, $type);
             } else if ($this->mode == self::MODE_MYSQLI) {
                 switch ($result_type) {
                     case self::QUERY_ASSOC:
@@ -671,13 +671,22 @@ class Database{
                         $type = MYSQLI_BOTH;
                         break;
                 }
-                return mysqli_fetch_array($this->result, $type);
+                $results = mysqli_fetch_array($this->result, $type);
             } else if ($this->mode == self::MODE_PDO) {
+                throw new DatabaseException('Un Support PDO.');
+                $results = null;
             }
+            if(is_array($results)){
+                if($this->charset == 'utf8'){
+                    foreach($results as $key => $val){
+                        $results[$key] = $this->utf8mb4_decode_numericentity($val);
+                    }
+                }
+            }
+            return $results;
         }
         return NULL;
     }
-
 
     /**
      * @return null|string
@@ -813,6 +822,9 @@ class Database{
      */
     public function escape($str)
     {
+        if($this->charset == 'utf8'){
+            $str = $this->utf8mb4_encode_numericentity($str);
+        }
         if ($this->mode == self::MODE_MYSQL) {
             return mysql_real_escape_string($str,$this->linkId);
         } else if ($this->mode == self::MODE_MYSQLI) {
@@ -830,6 +842,36 @@ class Database{
     public function escapeColumn($str)
     {
         return "`".$str."`";
+    }
+
+    /**
+     * @param $str
+     * @return mixed
+     */
+    private function utf8mb4_encode_numericentity($str)
+    {
+        $re = '/[^\x{0}-\x{FFFF}]/u';
+        return preg_replace_callback($re, function($m) {
+            $char = $m[0];
+            $x = ord($char[0]);
+            $y = ord($char[1]);
+            $z = ord($char[2]);
+            $w = ord($char[3]);
+            $cp = (($x & 0x7) << 18) | (($y & 0x3F) << 12) | (($z & 0x3F) << 6) | ($w & 0x3F);
+            return sprintf("&#x%X;", $cp);
+        }, $str);
+    }
+
+    /**
+     * @param $str
+     * @return mixed
+     */
+    private function utf8mb4_decode_numericentity($str)
+    {
+        $re = '/&#(x[0-9a-fA-F]{5,6}|\d{5,7});/';
+        return preg_replace_callback($re, function($m) {
+            return html_entity_decode($m[0]);
+        }, $str);
     }
 
     /**
