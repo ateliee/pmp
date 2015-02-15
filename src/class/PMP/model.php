@@ -145,12 +145,18 @@ class Model{
      */
     public function find($args,$first_set=false){
         $params = array();
-        foreach($args as $key => $val){
-            if($val instanceof Model){
-                $params[$key] = $val->getId();
-            }else{
-                $params[$key] = $val;
+        if(is_numeric($args)){
+            $params = array('id' => $args);
+        }else if(is_array($args)){
+            foreach($args as $key => $val){
+                if($val instanceof Model){
+                    $params[$key] = $val->getId();
+                }else{
+                    $params[$key] = $val;
+                }
             }
+        }else{
+            throw new \Exception('find() Paramater Must Be number or array.');
         }
         if($first_set){
             $results = $this->findQuery($params)->getResults();
