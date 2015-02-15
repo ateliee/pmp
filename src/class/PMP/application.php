@@ -249,8 +249,10 @@ class Application{
                 foreach($reflection_method->getParameters() as $key => $p){
                     if(array_key_exists($p->getName(),$data['param'])){
                         $params[$key] = $data['param'][$p->getName()];
+                    }else if($p->isDefaultValueAvailable()){
+                        $params[$key] = $p->getDefaultValue();
                     }else{
-                        throw new PMPException(sprintf('Not Found Controller Paramater %s',$p->getName()));
+                        throw new PMPException(sprintf('Not Found Controller Paramater %s In %s',get_class($controller).':'.$method,$p->getName()));
                     }
                 }
                 call_user_func_array(array($controller,$method), $params);
@@ -267,17 +269,17 @@ class Application{
 
 }
 
-{
-    $rootdir = dirname(__FILE__).'/../../../../../..';
-    $hostname = isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : '';
-    if(isset($_SERVER['SERVER_PORT']) && !in_array($_SERVER['SERVER_PORT'],array(80,443))){
-        $hostname .= ':'.$_SERVER['SERVER_PORT'];
-    }
-    $documentroot = preg_replace('/^'.preg_quote($_SERVER['DOCUMENT_ROOT'],'/').'/','',realpath($rootdir));
+    {
+        $rootdir = dirname(__FILE__).'/../../../../../..';
+        $hostname = isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : '';
+        if(isset($_SERVER['SERVER_PORT']) && !in_array($_SERVER['SERVER_PORT'],array(80,443))){
+            $hostname .= ':'.$_SERVER['SERVER_PORT'];
+        }
+        $documentroot = preg_replace('/^'.preg_quote($_SERVER['DOCUMENT_ROOT'],'/').'/','',realpath($rootdir));
 
-    Application::setRootDir($rootdir);
-    Application::setBaseUrl($documentroot);
-    Application::setWebUrl($documentroot.'/web');
-    Application::setHostname(isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '');
-    Application::setHostname(isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '');
-}
+        Application::setRootDir($rootdir);
+        Application::setBaseUrl($documentroot);
+        Application::setWebUrl($documentroot.'/web');
+        Application::setHostname(isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '');
+        Application::setHostname(isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '');
+    }
