@@ -144,13 +144,21 @@ class Model{
      * @return $this|null
      */
     public function find($args,$first_set=false){
+        $params = array();
+        foreach($args as $key => $val){
+            if($val instanceof Model){
+                $params[$key] = $val->getId();
+            }else{
+                $params[$key] = $val;
+            }
+        }
         if($first_set){
-            $results = $this->findQuery($args)->getResults();
+            $results = $this->findQuery($params)->getResults();
             if(count($results) > 0){
                 $result = $results[0];
             }
         }else{
-            $result = $this->findQuery($args)->getResult();
+            $result = $this->findQuery($params)->getResult();
         }
         if(isset($result)){
             $this->setArray($result,true,true);
