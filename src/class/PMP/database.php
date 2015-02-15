@@ -1141,6 +1141,9 @@ class Database{
             $sql_vals = array();
             $param = array("TABLE" => $this->escapeColumn($table_name));
             foreach($fields as $k => $v){
+                if(!isset($columns[$k])){
+                    throw new DatabaseException(sprintf('insert() Not Found Column %s',$k));
+                }
                 $f = $columns[$k];
                 if(!$v && ($f->getAi() || $f->getDefault())){
                     continue;

@@ -190,6 +190,9 @@ class Model{
     private function toDBArray(){
         $columns = array();
         foreach($this->getColumns() as $k => $v){
+            if($v->isCompareColumn()){
+                continue;
+            }
             $vv = $this->{$k};
             if($vv instanceof Model){
                 $columns[$k] = $vv->getId();
