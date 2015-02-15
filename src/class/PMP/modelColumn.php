@@ -143,6 +143,7 @@ class ModelColumn{
     static $TYPE_VARCHAR = 'varchar';
     static $TYPE_BINARY = 'binary';
     static $TYPE_VARBINARY = 'varbinary';
+    static $TYPE_BOOLEAN = 'boolean';
     static $TYPE_INT = 'int';
     static $TYPE_BIGINT = 'bigint';
     static $TYPE_SMALLINT = 'smallint';
@@ -181,6 +182,7 @@ class ModelColumn{
     protected $type;
     protected $length;
     protected $nullable;
+    protected $default_set;
     protected $default;
     protected $comment;
     protected $choices;
@@ -206,6 +208,7 @@ class ModelColumn{
         $this->length = 0;
         $this->nullable = false;
         $this->formenable = true;
+        $this->default_set = false;
         $this->default = false;
         $this->reference = null;
         foreach($field as $k => $v){
@@ -344,6 +347,7 @@ class ModelColumn{
             self::$TYPE_VARCHAR,
             self::$TYPE_BINARY,
             self::$TYPE_VARBINARY,
+            self::$TYPE_BOOLEAN,
             self::$TYPE_INT,
             self::$TYPE_BIGINT,
             self::$TYPE_SMALLINT,
@@ -506,6 +510,7 @@ class ModelColumn{
      */
     protected function setDefault($default)
     {
+        $this->default_set = true;
         $this->default = $default;
     }
 
@@ -658,12 +663,14 @@ class ModelColumn{
             'type' => $type,
             'length' => $length,
             'null' => $this->nullable,
-            'default' => $this->default,
             'comment' => $this->comment,
             'ai' => $this->ai,
             'unique' => $this->unique,
             'reference' => $this->getReference(),
         );
+        if($this->default_set){
+            $dbcolumn['default'] = $this->default;
+        }
         $db = new DatabaseColumn($dbcolumn);
         return $db;
     }

@@ -54,6 +54,131 @@ class ModelManager
         $trace = debug_backtrace();
         throw new \Exception(sprintf('Not Found model : %s of %s line %d',$name,$trace[0]['file'],$trace[0]['line']));
     }
+
+    /**
+     * @param null $where
+     * @return null|Model_QueryWhere
+     */
+    public function qw($where=null)
+    {
+        $where = new Model_QueryWhere($where);
+        return $where;
+    }
+}
+
+/**
+ * Class Model_QueryWhere
+ * @package PMP
+ */
+class Model_QueryWhere
+{
+    private $where;
+
+    function __construct($where=null)
+    {
+        $this->where = '';
+        if($where){
+            $this->andWhere($where);
+        }
+    }
+
+    /**
+     * @param $where
+     * @return $this
+     */
+    public function where($where){
+        $this->where = $where;
+        return $this;
+    }
+
+    /**
+     * @param $where
+     * @return $this
+     */
+    public function andWhere($where)
+    {
+        $this->where .= ($this->where != "" ? " AND " : "").$where;
+        return $this;
+    }
+
+    /**
+     * @param $where
+     * @return $this
+     */
+    public function orWhere($where)
+    {
+        $this->where .= ($this->where != "" ? " OR " : "").$where;
+        return $this;
+    }
+
+    /**
+     * @param $key
+     * @param $val
+     * @return string
+     */
+    public function inArray($key,$val)
+    {
+        if(is_array($val)){
+            $w = array();
+            foreach($val as $k => $v){
+                $w[] = $key." LIKE '%".Model::$DB_ARRAY_SPACER.$v.Model::$DB_ARRAY_SPACER."%'";
+            }
+            $this->where(implode(' OR ',$w));
+        }else{
+            $this->where($key." LIKE '%".Model::$DB_ARRAY_SPACER.$val.Model::$DB_ARRAY_SPACER."%'");
+        }
+        return $this;
+    }
+
+    /**
+     * @param $key
+     * @param $val
+     * @return $this
+     * @throws \Exception
+     */
+    public function in($key,$val)
+    {
+        if(is_array($val)){
+            $w = array();
+            foreach($val as $k => $v){
+                $w[] = $key."=".$v;
+            }
+            $this->where(implode(' OR ',$w));
+        }else{
+            throw new \Exception('Model_Query:in() Is Must Be Array.');
+        }
+        return $this;
+    }
+
+    /**
+     * @param $key
+     * @param $val
+     * @return $this
+     */
+    public function andIn($key,$val)
+    {
+        $where = new Model_QueryWhere();
+        $this->andWhere($where->in($key,$val));
+        return $this;
+    }
+
+    /**
+     * @param $key
+     * @param $val
+     * @return $this
+     */
+    public function orIn($key,$val)
+    {
+        $where = new Model_QueryWhere();
+        $this->orWhere($where->in($key,$val));
+        return $this;
+    }
+
+    function __toString()
+    {
+        return ($this->where) ? '('.$this->where.')' : '';
+    }
+
 }
 
 /**
@@ -86,7 +211,7 @@ class Model_Query
         $this->model_name = $name;
         $this->alias = $alias;
 
-        $this->where = null;
+        $this->where = new Model_QueryWhere();
         $this->finds = null;
         $this->order = null;
         $this->group = null;
@@ -125,7 +250,7 @@ class Model_Query
      * @return $this
      */
     public function where($where){
-        $this->where = $where;
+        $this->where->where($where);
         return $this;
     }
 
@@ -134,7 +259,7 @@ class Model_Query
      * @return $this
      */
     public function orWhere($where){
-        $this->where .= ($this->where != "" ? " OR " : "").$where;
+        $this->where->orWhere($where);
         return $this;
     }
 
@@ -143,7 +268,7 @@ class Model_Query
      * @return $this
      */
     public function andWhere($where){
-        $this->where .= ($this->where != "" ? " AND " : "").$where;
+        $this->where->andWhere($where);
         return $this;
     }
 
@@ -247,8 +372,9 @@ class Model_Query
         }else{
             $this->query->delete($model->getTableName());
         }
-        if($this->where){
-            $this->query->where($this->where);
+        $where = (string)$this->where;
+        if($where){
+            $this->query->where($where);
         }
         if($this->group){
             $this->query->group($this->group);

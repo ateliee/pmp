@@ -339,7 +339,9 @@ class Model{
             }else if(property_exists($this,$key)){
                 if($db_data){
                     $val = $column->getConvertValue($val);
-                    if($column->getType() == ModelColumn::$TYPE_ARRAY){
+                    if($column->getType() == ModelColumn::$TYPE_BOOLEAN){
+                        $this->{$key} = intval($val);
+                    }else if($column->getType() == ModelColumn::$TYPE_ARRAY){
                         $v = array();
                         if($val != ''){
                             $arr = explode(self::$DB_ARRAY_SPACER,$val);

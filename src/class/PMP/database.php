@@ -101,6 +101,7 @@ class DatabaseColumn{
     private $name;
     private $type;
     private $length;
+    private $default_set;
     private $default;
     private $attribute;
     private $null;
@@ -111,7 +112,8 @@ class DatabaseColumn{
     private $reference;
 
     function  __construct($field){
-        $this->default = false;
+        $this->default_set = false;
+        $this->default = null;
         $this->options = array();
         foreach($field as $k => $v){
             $k = strtolower($k);
@@ -141,6 +143,7 @@ class DatabaseColumn{
                     $this->null = $v ? true : false;
                 }
             }else if($k == "default"){
+                $this->default_set = true;
                 $this->default = $v;
             }else if($k == "collation"){
                 if($v == "unique"){
@@ -237,6 +240,15 @@ class DatabaseColumn{
     public function getDefault(){
         return $this->default;
     }
+
+    /**
+     * @return boolean
+     */
+    public function getDefaultSet()
+    {
+        return $this->default_set;
+    }
+
     /**
      * @return mixed
      */
@@ -273,6 +285,7 @@ class DatabaseColumn{
      */
     public function isInt(){
         return in_array($this->type,array(
+            "boolean",
             "int",
             "bigint",
             "smallint",
@@ -887,13 +900,16 @@ class Database{
                 }
             }
         }
-        if(!$result && ($column->getDefault() !== false)){
+        if(!$result && ($column->getDefaultSet())){
             $result = $column->getDefault();
         }
         if($result !== NULL){
             if($column->isString() || $column->isText() || $column->isDate()){
                 return "'".$this->escape($result)."'";
             }else{
+                if($column->isInt()){
+                    $result = intval($result);
+                }
                 return $this->escape($result);
             }
         }
@@ -1412,8 +1428,14 @@ class Database{
         if($field->getAi()){
             $attr[] = "AUTO_INCREMENT";
         }
-        if($field->getDefault() !== false){
-            $attr[] = "DEFAULT '".$field->getDefault()."'";
+        if($field->getDefaultSet()){
+            if($field->isDate() || $field->isString() || $field->isText()){
+                $attr[] = "DEFAULT '".$field->getDefault()."'";
+            }else if($field->isInt()){
+                $attr[] = "DEFAULT ".intval($field->getDefault())."";
+            }else{
+                $attr[] = "DEFAULT ".$field->getDefault()."";
+            }
         }else if($field->getNull()){
             $attr[] = "DEFAULT NULL";
         }

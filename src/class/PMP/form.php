@@ -64,6 +64,7 @@ class FormElement{
     static $TYPE_TEXTAREA = 'textarea';
     static $TYPE_SELECT = 'select';
     static $TYPE_CHECKBOX = 'checkbox';
+    static $TYPE_CHECKLIST = 'checklist';
     static $TYPE_RADIO = 'radio';
     static $TYPE_EMAIL = 'email';
     static $TYPE_URL = 'url';
@@ -78,6 +79,7 @@ class FormElement{
         'textarea',
         'select',
         'checkbox',
+        'checklist',
         'radio',
         'password',
         'email',
@@ -96,6 +98,7 @@ class FormElement{
     static $ATTR_LABEL = 'label';
     static $ATTR_MAXLENGTH = 'maxlength';
     static $ATTR_REQUIRED = 'required';
+    static $ATTR_VALUE = 'value';
     /**
      * private attr
      */
@@ -106,6 +109,7 @@ class FormElement{
         'label',
         'maxlength',
         'required',
+        'value',
     );
 
     private $type;
@@ -231,7 +235,7 @@ class FormElement{
     public function setAttrValue($key,$value)
     {
         if(!in_array($key,self::$ATTR_LIST)){
-            throw new \Exception(sprintf('Not support Form Attr [%s].support is "%s"',$key,implode('" or "',self::$ATTR_LIST)));
+            throw new \Exception(sprintf('Not Support Form Attr [%s]. Support is "%s"',$key,implode('" or "',self::$ATTR_LIST)));
         }
         $this->attr[$key] = $value;
     }
@@ -381,14 +385,32 @@ class FormElement{
                     $html->addChilds(new htmlElement('option',$opt,$v,false));
                 }
                 break;
-            case FormElement::$TYPE_RADIO:
             case FormElement::$TYPE_CHECKBOX:
+                $id = $attr[FormElement::$ATTR_ATTR]['id'];
+
+                $checkbox_attr = array_merge($html_attr,array('type' => $type,'value' => $attr[FormElement::$ATTR_VALUE]));
+                if($attr[FormElement::$ATTR_VALUE] == $value){
+                    $checkbox_attr['checked'] = 'checked';
+                }
+                $html = new htmlElement(null);
+                $html->addChilds(
+                    new htmlElement('input',$checkbox_attr)
+                );
+                $html->addChilds(
+                    new htmlElement('label',array('for' => $id),htmlElement::escape($label),false));
+                break;
+            case FormElement::$TYPE_RADIO:
+            case FormElement::$TYPE_CHECKLIST:
                 $html = new htmlElement(null);
                 if(isset($attr[FormElement::$ATTR_CHOICES])){
                     foreach($attr[FormElement::$ATTR_CHOICES] as $key => $v){
                         $id = $attr[FormElement::$ATTR_ATTR]['id'].'-'.$key;
                         $name = $this->getFormName().'[]';
-                        $input_attr = array_merge($html_attr,array('type' => $type,'id' => $id,'name' => $name,'value' => $key));
+                        $ctype = 'radio';
+                        if($type == FormElement::$TYPE_CHECKLIST){
+                            $ctype = 'checkbox';
+                        }
+                        $input_attr = array_merge($html_attr,array('type' => $ctype,'id' => $id,'name' => $name,'value' => $key));
 
                         if(is_array($value)){
                             if(in_array($key,$value)){
@@ -404,12 +426,7 @@ class FormElement{
                             new htmlElement('label',array('for' => $id),htmlElement::escape($v),false));
                     }
                 }else{
-                    $html->addChilds(
-                        new htmlElement('input',array_merge(
-                            $html_attr,
-                            array('type' => $type)))
-                    );
-                    $html->addChilds(new htmlEmptyElement(htmlElement::escape($label)));
+                    throw new \Exception('Form Type Radio OR Checklist Must Be "choices" attr.');
                 }
                 break;
             case FormElement::$TYPE_TEXTAREA:
@@ -594,6 +611,9 @@ class Form{
             $elm->setAttrValue(FormElement::$ATTR_FORMAT,$column->getFormat());
             $elm->setAttrValue(FormElement::$ATTR_CHOICES,$column->getChoices());
             $elm->setAttrValue(FormElement::$ATTR_LABEL,$column->getComment());
+            if($column->getType() == ModelColumn::$TYPE_BOOLEAN){
+                $elm->setAttrValue(FormElement::$ATTR_VALUE,1);
+            }
             if($column->getLength() > 0){
                 $elm->setAttrValue(FormElement::$ATTR_MAXLENGTH,$column->getLength());
             }
@@ -614,7 +634,8 @@ class Form{
      * @param ModelColumn $column
      * @return string
      */
-    private static function convertColumnsToFormType(ModelColumn $column){
+    private static function convertColumnsToFormType(ModelColumn $column)
+    {
         $field = $column->getDBColumn();
         $ctype = FormElement::$TYPE_TEXT;
         if($field->getAi()){
@@ -622,10 +643,12 @@ class Form{
         }else{
             if($column->getType() == ModelColumn::$TYPE_ARRAY){
                 if(count($column->getChoices()) > 0){
-                    $ctype = FormElement::$TYPE_CHECKBOX;
+                    $ctype = FormElement::$TYPE_CHECKLIST;
                 }else{
                     $ctype = FormElement::$TYPE_TEXTAREA;
                 }
+            }else if($field->getType() == ModelColumn::$TYPE_BOOLEAN){
+                $ctype = FormElement::$TYPE_CHECKBOX;
             }else if($field->isInt()){
                 if(count($column->getChoices()) > 0){
                     $ctype = FormElement::$TYPE_SELECT;
@@ -722,12 +745,16 @@ class Form{
     /**
      * @return bool
      */
-    public function isValid(){
+    public function isValid()
+    {
         if($this->request){
             $request = $this->request;
             $check_all = true;
 
             foreach($this->elem as $key => $val){
+                if(!($val instanceof FormElement)){
+                    throw new \Exception(sprintf('Form Element "%s" Not Type FormElement.',$key));
+                }
                 $error = new FormError();
                 $label = $val->getAttrValue(FormElement::$ATTR_LABEL,$key);
                 $form_key = $val->getPrex().$key;

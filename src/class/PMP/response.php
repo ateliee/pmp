@@ -12,9 +12,9 @@ class Response {
     /**
      * @param $arr
      */
-    function  __construct($contents){
+    function  __construct($contents=null,$headers=array()){
         $this->contents = $contents;
-        $this->setHeaders(array());
+        $this->setHeaders($headers);
     }
 
     /**
@@ -49,7 +49,9 @@ class Response {
         foreach($this->headers as $key => $val){
             header($key.":".$val);
         }
-        print $this->contents;
+        if($this->contents){
+            print $this->contents;
+        }
     }
 }
 
@@ -61,8 +63,7 @@ class JsonResponse extends Response{
 
     function __construct($contents)
     {
-        parent::__construct($contents);
-        $this->setHeaders(array(
+        parent::__construct($contents,array(
             'Content-Type' => 'application/json; charset=utf-8'
         ));
     }
