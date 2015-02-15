@@ -114,7 +114,7 @@ class Model_QueryWhere
     /**
      * @param $key
      * @param $val
-     * @return string
+     * @return $this
      */
     public function inArray($key,$val)
     {
