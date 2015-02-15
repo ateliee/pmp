@@ -190,6 +190,9 @@ class ModelColumn{
     protected $unique;
     protected $target_name;
     protected $target_column;
+    protected $self_column;
+    protected $target_order;
+    protected $target_sort;
 
     protected $reference;
     protected $connection;
@@ -235,19 +238,61 @@ class ModelColumn{
                 $this->setConnection($v);
             }else if($k == 'target'){
                 $this->setTarget($v);
+            }else if($k == 'order'){
+                $vv = explode(' ',$v);
+                if(count($vv) == 2){
+                    $this->target_order = $vv[0];
+                    $this->target_sort = $vv[1];
+                }else if(count($vv) == 1){
+                    $this->target_order = $vv[0];
+                    $this->target_sort = 'DESC';
+                }else{
+                    $trace = debug_backtrace();
+                    throw new \Exception('ModelColumn "order" Is Must Be "column sort" or "column" in '.$trace[1]['class']);
+                }
+            }else if($k == 'self'){
+                $this->self_column = $v;
             }else{
                 $trace = debug_backtrace();
-                throw new \Exception('not found ModelColumn option "'.$k.'" in '.$trace[1]['class']);
+                throw new \Exception('Not Found ModelColumn Option "'.$k.'" in '.$trace[1]['class']);
             }
         }
         if(!$this->type){
-            throw new \Exception('not found ModelColumn option "type" key.');
+            throw new \Exception('Not Found ModelColumn Option "type" Key.');
         }
         if(!$this->isDBColumn()){
             if(!$this->target_name || !$this->target_column){
-                throw new \Exception('not found ModelColumn option "target" key.');
+                throw new \Exception('Not Found ModelColumn Option "target" Key.');
+            }else{
+                if(!$this->self_column){
+                    $this->self_column = 'id';
+                }
             }
         }
+    }
+
+    /**
+     * @return string
+     */
+    public function getSelfColumn()
+    {
+        return $this->self_column;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getTargetOrder()
+    {
+        return $this->target_order;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTargetSort()
+    {
+        return $this->target_sort;
     }
 
     /**

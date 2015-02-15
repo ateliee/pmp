@@ -13,6 +13,8 @@ class Model{
     private $table_options;
     private $table_fields;
 
+    static private $from_connection = array();
+
     function  __construct(){
         $this->db = Database::getCurrentDB();
         $this->table_options = array(
@@ -39,6 +41,17 @@ class Model{
                             $field->setName($key);
                         }
                         $this->table_fields[$key] = $field;
+
+                        if($field->isCompareColumn()){
+                            $self = $field->getSelfColumn();
+                            if(!isset(self::$from_connection[$class_name])){
+                                self::$from_connection[$class_name] = array();
+                            }
+                            if(!isset(self::$from_connection[$class_name][$self])){
+                                self::$from_connection[$class_name][$self] = array();
+                            }
+                            self::$from_connection[$class_name][$self][$k] = $k;
+                        }
                     }else{
                         throw new PMPException($class_name.'->'.$v.'() must be return ModelColumn');
                     }
@@ -350,6 +363,22 @@ class Model{
                     $this->{$key} = $val;
                 }
             }
+            $class = get_class($this);
+            if(isset(self::$from_connection[$class][$key])){
+                foreach(self::$from_connection[$class][$key] as $k => $vv){
+                    $c = $this->getColumn($k);
+                    if($c->isCompareColumn()){
+                        $mm = new ModelManager();
+                        $v = $mm->createQuery($c->getTargetName(),'p')
+                            ->where('`p`.`'.$c->getTargetColumn().'`=:key')
+                            ->setParamater('key',$this->{$key});
+                        if($c->getTargetOrder()){
+                            $v->order($c->getTargetOrder(),$c->getTargetSort());
+                        }
+                        $this->{$k} = $v;
+                    }
+                }
+            }
         }else{
             throw new PMPException('Model->set() args.');
         }
@@ -523,15 +552,8 @@ class Model{
         }else if(property_exists(get_class($this),$name)){
             if($this->isExists($name)){
                 $column = $this->getColumn($name);
-                if($column->isCompareColumn()){
-                    $target_column = $column->getTargetColumn();
-
-                    $mm = new ModelManager();
-                    $res = $mm->createQuery($column->getTargetName(),'p')
-                        ->where('`p`.`'.$target_column.'`=:id')
-                        ->setParamater('id',$this->getId())
-                        ->getResults();
-                    return $res;
+                if($this->$name instanceof Model_Query){
+                    $this->$name = $this->$name->getResults();
                 }else if($column->getConnection()){
                     $target_name = $column->getConnection()->getTargetName();
                     $target_column = $column->getConnection()->getTargetColumn();

@@ -149,9 +149,14 @@ class Model_Query
 
     /**
      * @param $order
+     * @param null $sort
+     * @return $this
      */
-    public function order($order)
+    public function order($order,$sort=null)
     {
+        if($sort){
+            $order .= ' '.$sort;
+        }
         $this->order = $order;
         return $this;
     }
