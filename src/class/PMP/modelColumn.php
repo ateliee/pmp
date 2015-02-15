@@ -243,12 +243,8 @@ class ModelColumn{
                 if(count($vv) == 2){
                     $this->target_order = $vv[0];
                     $this->target_sort = $vv[1];
-                }else if(count($vv) == 1){
-                    $this->target_order = $vv[0];
-                    $this->target_sort = 'DESC';
                 }else{
-                    $trace = debug_backtrace();
-                    throw new \Exception('ModelColumn "order" Is Must Be "column sort" or "column" in '.$trace[1]['class']);
+                    $this->target_order = $v;
                 }
             }else if($k == 'self'){
                 $this->self_column = $v;
