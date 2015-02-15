@@ -39,14 +39,15 @@ class Debug{
         bottom:0;
         width: 100%;
         padding:0 0 0 60px;
-        background: #FFF;
-        border-top: solid 2px #666;
+        color:#fff;
+        background: #555;
+        border-top: solid 1px #333;
         z-index:10000;
     }
     .pmp_debug_menu{
         float: left;
         white-space: nowrap;
-        border-right:solid 1px #999;
+        border-right:solid 1px #888;
         position: relative;
     }
     .pmp_debug_menu .pmp_menu{
@@ -68,6 +69,7 @@ class Debug{
         min-width:500px;
         max-height:400px;
         overflow:auto;
+        color:#333;
     }
     .pmp_debug_menu .pmp_menu_value li{
         padding:3px 0px;
