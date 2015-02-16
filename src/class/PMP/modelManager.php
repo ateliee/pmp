@@ -72,7 +72,7 @@ class ModelManager
  */
 class Model_QueryWhere
 {
-    private $where;
+    protected $where;
 
     function __construct($where=null)
     {
@@ -89,6 +89,14 @@ class Model_QueryWhere
     public function where($where){
         $this->where = $where;
         return $this;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getWhere()
+    {
+        return $this->where;
     }
 
     /**
@@ -182,22 +190,130 @@ class Model_QueryWhere
 }
 
 /**
+ * Class Model_QueryBase
+ * @package PMP
+ */
+class Model_QueryBase extends Model_QueryWhere
+{
+    /**
+     * @var Model
+     */
+    protected $model;
+    protected $model_name;
+    protected $alias;
+
+    function __construct($name,$alias=null)
+    {
+        $this->model = null;
+        $this->model_name = $name;
+        $this->alias = $alias;
+    }
+
+    /**
+     * @return Model
+     */
+    protected function getModel()
+    {
+        if(!$this->model){
+            $this->model = new $this->model_name;
+        }
+        return $this->model;
+    }
+
+    /**
+     * @return null
+     */
+    protected function getAlias()
+    {
+        return $this->alias;
+    }
+
+    /**
+     * @return string[]
+     */
+    protected function getModelFind()
+    {
+        $p = array();
+        $alias_name = $this->alias ? $this->alias : $this->getModel()->getTableName();
+        foreach($this->getModel()->getColumns() as $column){
+            if($column->isDBColumn()){
+                $p[] = '`'.$alias_name.'`.`'.$column->getName().'`';
+            }
+        }
+        return $p;
+    }
+}
+
+/**
+ * Class Model_SubQuery
+ * @package PMP
+ */
+class Model_SubQuery extends Model_QueryBase
+{
+    const MODE_LEFTJOIN = 1;
+    const MODE_RIGHTJOIN = 2;
+    const MODE_INNERJOIN = 3;
+
+    /**
+     * @var int
+     */
+    private $joinType;
+    function __construct($type,$name,$alias=null)
+    {
+        $q = explode(' ',$name);
+        $q = array_filter($q,'strlen');
+        if(count($q) == 0){
+            throw new \Exception(sprintf('Un Support SubQuery Near "%s"',$name));
+        }
+        $where = null;
+        if(count($q) == 1){
+        }else if(count($q) >= 2){
+            $name = $q[0];
+            $alias = $q[1];
+            if(count($q) == 3 || strtoupper($q[2]) != 'ON'){
+                throw new \Exception(sprintf('Un Error SQL."%s"',$name));
+            }
+            $where = implode(' ',array_slice($q,3));
+        }
+        parent::__construct($name,$alias);
+
+        if(!in_array($type,array(self::MODE_LEFTJOIN,self::MODE_RIGHTJOIN,self::MODE_INNERJOIN))){
+            throw new \Exception(sprintf('Un Support Join Type %s',$type));
+        }
+        $this->joinType = $type;
+
+        if($where){
+            $this->where($where);
+        }
+    }
+
+    /**
+     * @return int
+     */
+    public function getJoinType()
+    {
+        return $this->joinType;
+    }
+}
+
+/**
  * Class ModelQuery
  * @package PMP
  */
-class Model_Query
+class Model_Query extends Model_QueryBase
 {
     const MODE_SELECT = 1;
     const MODE_DELETE = 3;
 
     private $mode;
     private $db;
-    private $model_name;
-    private $alias;
     private $query;
 
+    /**
+     * @var Model_SubQuery[]
+     */
+    private $subquery;
     private $finds;
-    private $where;
     private $order;
     private $group;
     private $start;
@@ -206,12 +322,12 @@ class Model_Query
 
     function __construct($name,Database $db,$alias=null)
     {
+        parent::__construct($name,$alias);
+
         $this->mode = self::MODE_SELECT;
         $this->db = $db;
-        $this->model_name = $name;
-        $this->alias = $alias;
 
-        $this->where = new Model_QueryWhere();
+        $this->subquery = array();
         $this->finds = null;
         $this->order = null;
         $this->group = null;
@@ -246,29 +362,38 @@ class Model_Query
     }
 
     /**
-     * @param $where
+     * @param $target
+     * @param null $alias
      * @return $this
      */
-    public function where($where){
-        $this->where->where($where);
+    public function leftJoin($target,$alias=null)
+    {
+        $sub = new Model_SubQuery(Model_SubQuery::MODE_LEFTJOIN,$target,$alias);
+        $this->subquery[] = $sub;
         return $this;
     }
 
     /**
-     * @param $where
+     * @param $target
+     * @param null $alias
      * @return $this
      */
-    public function orWhere($where){
-        $this->where->orWhere($where);
+    public function rightJoin($target,$alias=null)
+    {
+        $sub = new Model_SubQuery(Model_SubQuery::MODE_RIGHTJOIN,$target,$alias);
+        $this->subquery[] = $sub;
         return $this;
     }
 
     /**
-     * @param $where
+     * @param $target
+     * @param null $alias
      * @return $this
      */
-    public function andWhere($where){
-        $this->where->andWhere($where);
+    public function innerJoin($target,$alias=null)
+    {
+        $sub = new Model_SubQuery(Model_SubQuery::MODE_INNERJOIN,$target,$alias);
+        $this->subquery[] = $sub;
         return $this;
     }
 
@@ -352,7 +477,7 @@ class Model_Query
     private function executeQuery()
     {
         $this->query = new SQL_Query($this->db);
-        $model = new $this->model_name;
+        $model = $this->getModel();
 
         if($this->mode == self::MODE_SELECT){
             $this->query->select($model->getTableName(),$this->alias);
@@ -360,21 +485,32 @@ class Model_Query
             if($this->finds){
                 $this->query->find($this->finds);
             }else{
-                $p = array();
-                $alias_name = $this->alias ? $this->alias : $model->getTableName();
-                foreach($model->getColumns() as $column){
-                    if($column->isDBColumn()){
-                        $p[] = '`'.$alias_name.'`.`'.$column->getName().'`';
-                    }
+                $p = $this->getModelFind();
+                foreach($this->subquery as $q){
+                    $p += $q->getModelFind();
                 }
                 $this->query->find($p);
             }
         }else{
             $this->query->delete($model->getTableName());
         }
-        $where = (string)$this->where;
-        if($where){
-            $this->query->where($where);
+        if(count($this->subquery) > 0){
+            foreach($this->subquery as $q){
+                $qn = $q->getModel()->getTableName();
+                if($q->getAlias()){
+                    $qn .= ' AS '.$q->getAlias();
+                }
+                if($q->getJoinType() == Model_SubQuery::MODE_LEFTJOIN){
+                    $this->query->leftJoin($qn,$q->getWhere());
+                }else if($q->getJoinType() == Model_SubQuery::MODE_RIGHTJOIN){
+                    $this->query->rightJoin($qn,$q->getWhere());
+                }else if($q->getJoinType() == Model_SubQuery::MODE_INNERJOIN){
+                    $this->query->innerJoin($qn,$q->getWhere());
+                }
+            }
+        }
+        if($this->where){
+            $this->query->where($this->where);
         }
         if($this->group){
             $this->query->group($this->group);
@@ -397,7 +533,7 @@ class Model_Query
      */
     public function getResult()
     {
-        $model = new $this->model_name;
+        $model = $this->getModel();
         if($results = $this->getArrayResult()){
             $model->setArray($results);
         }
@@ -409,7 +545,7 @@ class Model_Query
      */
     public function getFirstResult()
     {
-        $model = new $this->model_name;
+        $model = $this->getModel();
         if($results = $this->getArrayFirstResult()){
             $model->setArray($results);
         }

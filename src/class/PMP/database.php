@@ -1501,20 +1501,116 @@ class Database{
 }
 
 /**
+ * Class SQL_QueryBase
+ */
+class SQL_QueryBase
+{
+    protected $table_name;
+    protected $table_alias;
+    protected $where;
+
+    /**
+     * @param $table_name
+     * @param null $alias
+     */
+    protected function setTableName($table_name,$alias=null)
+    {
+        $this->table_name = $table_name;
+        $this->table_alias = $alias;
+        $this->where = null;
+    }
+
+    /**
+     * @return $this
+     */
+    public function where()
+    {
+        $this->where = $this->convertArgsSQL(func_get_args());
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function orWhere()
+    {
+        $where = $this->convertArgsSQL(func_get_args());
+        $this->where .= ($this->where != "" ? " OR " : "").$where;
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function andWhere()
+    {
+        $where = $this->convertArgsSQL(func_get_args());
+        $this->where .= ($this->where != "" ? " AND " : "").$where;
+        return $this;
+    }
+
+    /**
+     * @param $args
+     * @return mixed
+     * @throws DatabaseException
+     */
+    protected function convertArgsSQL($args)
+    {
+        if(count($args) > 1){
+            return call_user_func_array("sprintf", $args);
+        }else if(count($args) > 0 && is_string($args[0])){
+            return $args[0];
+        }else{
+            throw new DatabaseException('error args parse');
+        }
+    }
+
+}
+
+/**
+ * Class SQL_SubQuery
+ */
+class SQL_SubQuery extends SQL_QueryBase
+{
+    protected $join_mode;
+
+    function __construct($join_mode)
+    {
+        $this->join_mode = $join_mode;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSubQuery()
+    {
+        $sql = $this->join_mode.' '.$this->table_name;
+        if($this->table_alias){
+            $sql .= ' AS '.$this->table_alias;
+        }
+        if($this->where){
+            $sql .= ' ON '.$this->where;
+        }
+        return $sql;
+    }
+}
+
+/**
  * Class SQL_Query
  */
-class SQL_Query{
+class SQL_Query extends SQL_QueryBase
+{
     const MODE_SELECT = 1;
-    const MODE_SUBQUERY = 2;
     const MODE_DELETE = 3;
 
     private $mode;
     private $action;
     private $database;
+    /**
+     * @var SQL_SubQuery[]
+     */
+    private $subquerys;
     private $find;
-    private $table_name;
-    private $table_alias;
-    private $where;
     private $order;
     private $group;
     private $start;
@@ -1528,8 +1624,10 @@ class SQL_Query{
     /**
      *
      */
-    private function resetConfig(){
+    private function resetConfig()
+    {
         $this->find = "";
+        $this->subquerys = array();
         $this->where = "";
         $this->order = "";
         $this->group = "";
@@ -1542,11 +1640,11 @@ class SQL_Query{
      * @param null $alias
      * @return $this
      */
-    public function select($table_name,$alias=null){
+    public function select($table_name,$alias=null)
+    {
         $this->mode = self::MODE_SELECT;
         $this->action = "SELECT";
-        $this->table_name = $table_name;
-        $this->table_alias = $alias;
+        $this->setTableName($table_name,$alias);
         return $this;
     }
 
@@ -1554,43 +1652,53 @@ class SQL_Query{
      * @param $action
      * @return $this
      */
-    public function delete($table_name){
+    public function delete($table_name)
+    {
         $this->mode = self::MODE_DELETE;
         $this->action = "DELETE";
-        $this->table_name = $table_name;
+        $this->setTableName($table_name);
         return $this;
     }
 
     /**
      * @param $table_name
+     * @param $where
      * @return $this
      */
-    public function leftJoin($table_name){
-        $this->mode = self::MODE_SUBQUERY;
-        $this->action = "LEFT JOIN";
-        $this->table_name = $table_name;
+    public function leftJoin($table_name,$where)
+    {
+        $q = new SQL_SubQuery("LEFT JOIN");
+        $q->setTableName($table_name);
+        $q->where($where);
+        $this->subquerys[] = $q;
         return $this;
     }
 
     /**
      * @param $table_name
+     * @param $where
      * @return $this
      */
-    public function rightJoin($table_name){
-        $this->mode = self::MODE_SUBQUERY;
-        $this->action = "RIGHT JOIN";
-        $this->table_name = $table_name;
+    public function rightJoin($table_name,$where)
+    {
+        $q = new SQL_SubQuery("RIGHT JOIN");
+        $q->setTableName($table_name);
+        $q->where($where);
+        $this->subquerys[] = $q;
         return $this;
     }
 
     /**
      * @param $table_name
+     * @param $where
      * @return $this
      */
-    public function innerJoin($table_name){
-        $this->mode = self::MODE_SUBQUERY;
-        $this->action = "RIGHT JOIN";
-        $this->table_name = $table_name;
+    public function innerJoin($table_name,$where)
+    {
+        $q = new SQL_SubQuery("RIGHT JOIN");
+        $q->setTableName($table_name);
+        $q->where($where);
+        $this->subquerys[] = $q;
         return $this;
     }
 
@@ -1599,7 +1707,8 @@ class SQL_Query{
      * @return $this
      * @throws PMPException
      */
-    public function find($fields){
+    public function find($fields)
+    {
         if(is_string($fields)){
             $this->find = $fields;
         }else if(is_array($fields)){
@@ -1616,51 +1725,10 @@ class SQL_Query{
     }
 
     /**
-     * @param $args
-     * @return mixed
-     * @throws DatabaseException
+     * @return $this
      */
-    private function convertArgsSQL($args)
+    public function order()
     {
-        if(count($args) > 1){
-            return call_user_func_array("sprintf", $args);
-        }else if(count($args) > 0 && is_string($args[0])){
-            return $args[0];
-        }else{
-            throw new DatabaseException('error args parse');
-        }
-    }
-
-    /**
-     * @return $this
-     */
-    public function where(){
-        $this->where = $this->convertArgsSQL(func_get_args());
-        return $this;
-    }
-
-    /**
-     * @return $this
-     */
-    public function orWhere(){
-        $where = $this->convertArgsSQL(func_get_args());
-        $this->where .= ($this->where != "" ? " OR " : "").$where;
-        return $this;
-    }
-
-    /**
-     * @return $this
-     */
-    public function andWhere(){
-        $where = $this->convertArgsSQL(func_get_args());
-        $this->where .= ($this->where != "" ? " AND " : "").$where;
-        return $this;
-    }
-
-    /**
-     * @return $this
-     */
-    public function order(){
         $order = $this->convertArgsSQL(func_get_args());
         $this->order = $order;
         return $this;
@@ -1669,7 +1737,8 @@ class SQL_Query{
     /**
      * @return $this
      */
-    public function group(){
+    public function group()
+    {
         $group = $this->convertArgsSQL(func_get_args());
         $this->group = $group;
         return $this;
@@ -1679,7 +1748,8 @@ class SQL_Query{
      * @return $this
      * @throws \Exception
      */
-    public function limit(){
+    public function limit()
+    {
         if(func_num_args() == 1){
             $this->start = 0;
             $this->limit = func_get_arg(0);
@@ -1708,6 +1778,9 @@ class SQL_Query{
             if($this->table_alias){
                 $sql .= "AS `".$this->table_alias."` ";
             }
+            foreach($this->subquerys as $q){
+                $sql .= $q->getSubQuery();
+            }
             if($this->where != ""){
                 $sql .= " WHERE (".$this->where.")";
             }
@@ -1719,11 +1792,6 @@ class SQL_Query{
             }
             if($this->start > 0 || $this->limit){
                 $sql .= " LIMIT ".$this->start.",".$this->limit.";";
-            }
-        }else if($this->mode == self::MODE_SUBQUERY){
-            $sql = $this->action." ".$this->database->escapeColumn($this->table_name)."";
-            if($this->where != ""){
-                $sql .= " ON (".$this->where.")";
             }
         }else if($this->mode == self::MODE_DELETE){
             $sql = $this->action." FROM ".$this->database->escapeColumn($this->table_name)."";

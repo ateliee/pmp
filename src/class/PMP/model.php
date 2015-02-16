@@ -9,8 +9,14 @@ class Model{
     static $DB_ARRAY_SPACER = '-';
 
     private $id;
+    /**
+     * @var Database
+     */
     private $db;
     private $table_options;
+    /**
+     * @var ModelColumn[]
+     */
     private $table_fields;
 
     static private $from_connection = array();
@@ -81,7 +87,7 @@ class Model{
     }
 
     /**
-     * @return array
+     * @return ModelColumn[]
      */
     public function getColumns(){
         return $this->table_fields;
