@@ -770,7 +770,7 @@ class Database{
      */
     public function getFirstResult($prex=null,$replace=null){
         if($this->result){
-            if($this->numRows() > 1){
+            if($this->numRows() > 0){
                 $value = $this->fetchArray(self::QUERY_ASSOC);
                 return $this->replacePrex($value,$prex,$replace);
             }
@@ -1324,7 +1324,7 @@ class Database{
             $params = array("TABLE" => $table_name);
             foreach($fields as $k => $v){
                 //if(!$v && !$columns[$k]->getAi() && !$columns[$k]->getDefault()){
-                    //continue;
+                //continue;
                 //}
                 $sql_vals[] = $this->escapeColumn($k)."=".$this->convertColumn($v,$columns[$k])."";
             }
