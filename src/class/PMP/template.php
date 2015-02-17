@@ -1,10 +1,10 @@
 <?php
 namespace PMP;
 
-/**
- * Class Template v1
- * support mysql
- */
+    /**
+     * Class Template v1
+     * support mysql
+     */
 # TODO : PHP template convert
 # TODO : cache create
 
@@ -542,6 +542,7 @@ class Template {
 
     /**
      * @param $str
+     * @throws TemplateException
      */
     private function error($str){
         throw new TemplateException('Template : '.$str);
@@ -859,7 +860,7 @@ class Template {
                         $result = $this->convertTemplateVar($node->getParam($param_num),false);
                         $param_num ++;
                     }else{
-                        $this->error('not var Params count');
+                        $this->error('Not Var Params Count');
                     }
                 }else{
                     $result = $this->convertNodeToVar($node,$this->Vars,true);
@@ -872,7 +873,7 @@ class Template {
                             $p2 = $this->convertTemplateVar($node->getParam($param_num+1),false);
                             $result = $this->convertToCalculation($result,$c->getName(),$p2);
                         }else{
-                            $this->error('not support var');
+                            $this->error('Not Support Var');
                         }
                     }
                 }
@@ -887,11 +888,11 @@ class Template {
                         $p2 = $this->convertTemplateVar($node,false);
                         $result = $this->convertToCalculation(0,$c->getName(),$p2);
                     }else{
-                        $this->error('not support calculation');
+                        $this->error('Not Support Calculation');
                     }
                 }
             }else{
-                $this->error('not found Parser');
+                $this->error('Not Found Parser');
             }
             if(!$loop){
                 break;
@@ -1052,7 +1053,7 @@ class Template {
                         }
                     } else if (!array_key_exists($key, $result)) {
                         $this->error("Not Found [" . $str . "] value;");
-                        $result = NULL;
+                        return null;
                     } else {
                         //$tmp_output[$key] = (is_array($value[$key])) ? array() : true;
                         if($set_output){
@@ -1071,6 +1072,7 @@ class Template {
                         $result = $variables[$key];
                     }else{
                         $this->error("Not Found Value ".$str." in [" . $key . "] Value;");
+                        return null;
                     }
                     if(isset($variables[$key]) && $set_output){
                         if(!isset($this->outputVars[$key])){
@@ -1084,7 +1086,7 @@ class Template {
                     $result = $result[$key];
                 }
             }else{
-                $this->error('not found format '.$str.'.');
+                $this->error('Not Found Format '.$str.'.');
             }
         }
         return $result;
