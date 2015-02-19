@@ -354,9 +354,14 @@ class Model_Query extends Model_QueryBase
 
     /**
      * @param $find
+     * @return $this
+     * @throws \Exception
      */
     public function find($find)
     {
+        if(!$find){
+            throw new \Exception('"find" Paramater Is Empty.');
+        }
         $this->finds = $find;
         return $this;
     }
@@ -401,9 +406,13 @@ class Model_Query extends Model_QueryBase
      * @param $order
      * @param null $sort
      * @return $this
+     * @throws \Exception
      */
     public function order($order,$sort=null)
     {
+        if(!$order){
+            throw new \Exception('"order" Paramater Is Empty.');
+        }
         if($sort){
             $order .= ' '.$sort;
         }
@@ -413,9 +422,14 @@ class Model_Query extends Model_QueryBase
 
     /**
      * @param $group
+     * @return $this
+     * @throws \Exception
      */
     public function group($group)
     {
+        if(!$group){
+            throw new \Exception('"group" Paramater Is Empty.');
+        }
         $this->group = $group;
         return $this;
     }
