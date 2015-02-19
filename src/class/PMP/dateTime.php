@@ -7,8 +7,9 @@ namespace PMP;
  */
 class DateTime extends Date
 {
-    function __toString()
+
+    function __construct($time=null,$default_format='Y-m-d H:i:s')
     {
-        return $this->getDateTime();
+        parent::__construct($time,$default_format);
     }
 }
