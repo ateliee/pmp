@@ -539,7 +539,15 @@ class Model_Query extends Model_QueryBase
                 $this->query->limit($this->limit);
             }
         }
-        return $this->query->execute($this->params);
+        $params = array();
+        foreach($this->params as $key => $p){
+            if($p instanceof Model){
+                $params[$key] = $p->getId();
+            }else{
+                $params[$key] = $p;
+            }
+        }
+        return $this->query->execute($params);
     }
 
     /**

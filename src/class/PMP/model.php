@@ -137,7 +137,10 @@ class Model{
      * @return ModelColumn
      */
     public function getColumn($key){
-        return $this->table_fields[$key];
+        if(isset($this->table_fields[$key])){
+            return $this->table_fields[$key];
+        }
+        throw new \Exception(sprintf('"%s" Column Not Found "%s".',get_class($this),$key));
     }
 
     /**
@@ -332,58 +335,64 @@ class Model{
     public function set($key,$val,$method_call = true,$db_data=false)
     {
         if(is_string($key)){
-            $column = $this->getColumn($key);
-            if(in_array($column->getType(),array(ModelColumn::$TYPE_DATE))){
-                $val = new \PMP\Date($val);
-            }else if(in_array($column->getType(),array(ModelColumn::$TYPE_DATETIME,ModelColumn::$TYPE_TIMESTAMP))){
-                $val = new \PMP\DateTime($val);
+            $column = null;
+            try{
+                $column = $this->getColumn($key);
+            }catch (\Exception $e){
             }
+            if($column){
+                if(in_array($column->getType(),array(ModelColumn::$TYPE_DATE))){
+                    $val = new \PMP\Date($val);
+                }else if(in_array($column->getType(),array(ModelColumn::$TYPE_DATETIME,ModelColumn::$TYPE_TIMESTAMP))){
+                    $val = new \PMP\DateTime($val);
+                }
 
-            $method = "set".ucfirst($key);
-            if($method_call && method_exists($this,$method)){
-                $this->$method($val);
-            }else if(property_exists($this,$key)){
-                if($db_data){
-                    $val = $column->getConvertValue($val);
-                    if($column->getType() == ModelColumn::$TYPE_BOOLEAN){
-                        $this->{$key} = intval($val);
-                    }else if($column->getType() == ModelColumn::$TYPE_ARRAY){
-                        $v = array();
-                        if($val != ''){
-                            $arr = explode(self::$DB_ARRAY_SPACER,$val);
-                            array_shift($arr);
-                            array_pop($arr);
-                            foreach($arr as $vv){
-                                $v[] = $vv;
+                $method = "set".ucfirst($key);
+                if($method_call && method_exists($this,$method)){
+                    $this->$method($val);
+                }else if(property_exists($this,$key)){
+                    if($db_data){
+                        $val = $column->getConvertValue($val);
+                        if($column->getType() == ModelColumn::$TYPE_BOOLEAN){
+                            $this->{$key} = intval($val);
+                        }else if($column->getType() == ModelColumn::$TYPE_ARRAY){
+                            $v = array();
+                            if($val != ''){
+                                $arr = explode(self::$DB_ARRAY_SPACER,$val);
+                                array_shift($arr);
+                                array_pop($arr);
+                                foreach($arr as $vv){
+                                    $v[] = $vv;
+                                }
                             }
+                            $this->{$key} = $v;
+                        }else if($column->getType() == ModelColumn::$TYPE_DATA){
+                            $v = null;
+                            if($val){
+                                $v = unserialize($val);
+                            }
+                            $this->{$key} = $v;
+                        }else{
+                            $this->{$key} = $val;
                         }
-                        $this->{$key} = $v;
-                    }else if($column->getType() == ModelColumn::$TYPE_DATA){
-                        $v = null;
-                        if($val){
-                            $v = unserialize($val);
-                        }
-                        $this->{$key} = $v;
                     }else{
                         $this->{$key} = $val;
                     }
-                }else{
-                    $this->{$key} = $val;
                 }
-            }
-            $class = get_class($this);
-            if(isset(self::$from_connection[$class][$key])){
-                foreach(self::$from_connection[$class][$key] as $k => $vv){
-                    $c = $this->getColumn($k);
-                    if($c->isCompareColumn()){
-                        $mm = new ModelManager();
-                        $v = $mm->createQuery($c->getTargetName(),'p')
-                            ->where('`p`.`'.$c->getTargetColumn().'`=:key')
-                            ->setParamater('key',$this->{$key});
-                        if($c->getTargetOrder()){
-                            $v->order($c->getTargetOrder(),$c->getTargetSort());
+                $class = get_class($this);
+                if(isset(self::$from_connection[$class][$key])){
+                    foreach(self::$from_connection[$class][$key] as $k => $vv){
+                        $c = $this->getColumn($k);
+                        if($c->isCompareColumn()){
+                            $mm = new ModelManager();
+                            $v = $mm->createQuery($c->getTargetName(),'p')
+                                ->where('`p`.`'.$c->getTargetColumn().'`=:key')
+                                ->setParamater('key',$this->{$key});
+                            if($c->getTargetOrder()){
+                                $v->order($c->getTargetOrder(),$c->getTargetSort());
+                            }
+                            $this->{$k} = $v;
                         }
-                        $this->{$k} = $v;
                     }
                 }
             }
