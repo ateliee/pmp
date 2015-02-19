@@ -12,7 +12,6 @@ class Date
 
     function __construct($time=null,$default_format='Y-m-d')
     {
-        var_dump($time);
         $this->setDefaultFormat($default_format);
         if(is_numeric($time)){
             $this->time = $time;
