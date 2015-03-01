@@ -1416,7 +1416,7 @@ class Template {
                     }else{
                         $time = time();
                     }
-                    if($time <= 0){
+                    if($time < 0 || $time === FALSE){
                         $this->error('date() paramater is string or number.'.$params[1].' given.');
                     }
                     $result = date($params[0],$time);
