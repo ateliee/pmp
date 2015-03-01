@@ -240,6 +240,12 @@ class Model{
                 }
             }else if($v->getType() == ModelColumn::$TYPE_DATA){
                 $columns[$k] = serialize($vv);
+            }else if(in_array($v->getType(),array(ModelColumn::$TYPE_DATE,ModelColumn::$TYPE_DATETIME))){
+                $vv = (string)$vv;
+                if(!$vv){
+                    $vv = null;
+                }
+                $columns[$k] = ($vv);
             }else{
                 $columns[$k] = $vv;
             }
