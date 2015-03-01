@@ -17,6 +17,9 @@ class Date
             $this->time = $time;
         }else if(is_string($time)){
             $this->time = strtotime($time);
+            if($this->time === false || $this->time < 0){
+                $this->time = 0;
+            }
         }else if($time instanceof Date){
             $this->time = $time->getTimestamp();
         }else if(!$this->time){
@@ -32,7 +35,7 @@ class Date
      */
     public function format($format)
     {
-        if($this->time){
+        if($this->time >= 0){
             return date($format,$this->time);
         }
         return null;
@@ -110,4 +113,5 @@ class Date
         }
         return '';
     }
+
 }

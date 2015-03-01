@@ -1412,6 +1412,9 @@ class Template {
                             $time = $params[1];
                         }else{
                             $time = strtotime((string)$params[1]);
+                            if($time === false || $time < 0){
+                                $time = 0;
+                            }
                         }
                     }else{
                         $time = time();
