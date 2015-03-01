@@ -181,6 +181,19 @@ class CommandAction extends Shell{
     }
 
     /**
+     * @param $key
+     * @param null $default
+     * @return null
+     */
+    public function getCallParam($key,$default=null)
+    {
+        if(isset($this->call_params[$key])){
+            return $this->call_params[$key];
+        }
+        return $default;
+    }
+
+    /**
      * @return mixed
      */
     public function getCallOptions()
@@ -390,7 +403,7 @@ class Command{
             if($this->actions[$this->command]->run($this->command,$this->params,$this->option)){
                 return true;
             }else{
-                $response = 'not support action '.$this->command."\n";
+                $response = 'Not Support Action '.$this->command."\n";
                 $response .= $this->actions[$this->command]->getHelp()."\n";
                 $this->error($response);
                 return false;
@@ -406,7 +419,7 @@ class Command{
      */
     public function helpAction(){
         global $argv;
-        $response = 'not found command action.'."\n";
+        $response = 'Not Found Command Action.'."\n";
         foreach($this->actions as $name => $val){
             $response .= '    php '.$argv[0].' '.$name.' : '.$val->getDescription();
             $response .= "\n";
