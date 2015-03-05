@@ -557,7 +557,7 @@ class Model_Query extends Model_QueryBase
     {
         $model = $this->getModel();
         if($results = $this->getArrayResult()){
-            $model->setArray($results);
+            $model->setArray($results,true,true);
         }
         return $model;
     }
@@ -569,7 +569,7 @@ class Model_Query extends Model_QueryBase
     {
         $model = $this->getModel();
         if($results = $this->getArrayFirstResult()){
-            $model->setArray($results);
+            $model->setArray($results,true,true);
         }
         return $model;
     }
@@ -619,7 +619,7 @@ class Model_Query extends Model_QueryBase
         if($query_results = $this->getArrayResults()){
             foreach($query_results as $res){
                 $model = new $this->model_name;
-                $model->setArray($res);
+                $model->setArray($res,true,true);
                 $results[] = $model;
             }
         }

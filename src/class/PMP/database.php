@@ -1324,7 +1324,7 @@ class Database{
             $params = array("TABLE" => $table_name);
             foreach($fields as $k => $v){
                 //if(!$v && !$columns[$k]->getAi() && !$columns[$k]->getDefault()){
-                //continue;
+                    //continue;
                 //}
                 $sql_vals[] = $this->escapeColumn($k)."=".$this->convertColumn($v,$columns[$k])."";
             }

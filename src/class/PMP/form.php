@@ -125,7 +125,7 @@ class FormElement{
     function __construct($type,$prex=NULL){
         $type = strtolower($type);
         if(!in_array($type,self::$TYPE_LIST)){
-            throw new \Exception(sprintf('Not support Form Type [%s].support is "%s"',$type,implode('" or "',self::$TYPE_LIST)));
+            throw new \Exception(sprintf('Not support Form Type [%s].Support Is "%s"',$type,implode('" or "',self::$TYPE_LIST)));
         }
         $this->type = $type;
         $this->attr = array();
@@ -339,10 +339,11 @@ class FormElement{
             }
             $list[$k] = $v;
         }
-        $list['name'] = $this->getFormName();
         if(isset($this->attr[FormElement::$ATTR_ATTR])){
             $list = array_merge($this->attr[FormElement::$ATTR_ATTR],$list);
         }
+        $list['name'] = $this->getFormName();
+        $list['id'] = $this->getFormId();
         return $list;
     }
 
@@ -386,10 +387,10 @@ class FormElement{
                 }
                 break;
             case FormElement::$TYPE_CHECKBOX:
-                $id = $attr[FormElement::$ATTR_ATTR]['id'];
+                $id = $html_attr['id'];
 
-                $checkbox_attr = array_merge($html_attr,array('type' => $type,'value' => $attr[FormElement::$ATTR_VALUE]));
-                if($attr[FormElement::$ATTR_VALUE] == $value){
+                $checkbox_attr = array_merge($html_attr,array('type' => $type,'value' => (isset($attr[FormElement::$ATTR_VALUE]) ? $attr[FormElement::$ATTR_VALUE] : '')));
+                if(isset($attr[FormElement::$ATTR_VALUE]) && $attr[FormElement::$ATTR_VALUE] == $value){
                     $checkbox_attr['checked'] = 'checked';
                 }
                 $html = new htmlElement(null);
@@ -404,7 +405,7 @@ class FormElement{
                 $html = new htmlElement(null);
                 if(isset($attr[FormElement::$ATTR_CHOICES])){
                     foreach($attr[FormElement::$ATTR_CHOICES] as $key => $v){
-                        $id = $attr[FormElement::$ATTR_ATTR]['id'].'-'.$key;
+                        $id = $html_attr['id'].'-'.$key;
                         $name = $this->getFormName().'[]';
                         $ctype = 'radio';
                         if($type == FormElement::$TYPE_CHECKLIST){
