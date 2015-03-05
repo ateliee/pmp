@@ -189,7 +189,7 @@ class Model{
             $result = $this->findQuery($params)->getResult();
         }
         if(isset($result)){
-            $this->setArray($result,true,true,true);
+            $this->setArray($result,true,true);
             return $this;
         }
         return null;
