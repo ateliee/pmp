@@ -6,16 +6,49 @@ namespace PMP;
  * @package PMP
  */
 class Pager {
+    const PAGE_PARAM = 1;
+    const PAGE_URI = 2;
+
+    private $mode;
+    private $param_name;
     private $current;
     private $total;
     private $limit;
     private $round;
     private $uri;
 
-    function  __construct(){
+    function  __construct($mode=self::PAGE_PARAM){
+        $this->setMode($mode,'page');
+        $this->mode = $mode;
         $this->current = 0;
         $this->total = 0;
         $this->limit = 0;
+    }
+
+    /**
+     * @param $mode
+     * @param $param
+     * @throws \Exception
+     */
+    public function setMode($mode,$param){
+        switch($mode){
+            case self::PAGE_PARAM;
+            case self::PAGE_URI;
+                $this->mode = $mode;
+                $this->param_name = $param;
+                break;
+            default:
+                throw new \Exception(sprintf('UnSupport Mode %s',$mode));
+                break;
+        }
+    }
+
+    /**
+     * @return int
+     */
+    public function getMode()
+    {
+        return $this->mode;
     }
 
     /**
@@ -65,12 +98,56 @@ class Pager {
 
     /**
      * @param $num
-     * @return mixed
+     * @return string
+     * @throws \Exception
      */
     public function getUri($num){
+        if(!$this->uri){
+            throw new \Exception('Pager() NuSetup uri Param. Please setBaseUri() Call.');
+        }
         $uri = $this->uri;
-        $uri = sprintf($uri,$num);
-        return $uri;
+
+        $pase_url = parse_url($uri);
+        if($this->mode == self::PAGE_PARAM){
+            $query = array();
+            if(isset($pase_url['query'])){
+                parse_str(urldecode($pase_url['query']),$query);
+            }
+            if($num > 0){
+                $query[$this->param_name] = $num;
+            }
+            $pase_url['query'] = http_build_query($query);
+        }else if($this->mode == self::PAGE_URI){
+            if(!isset($pase_url['path'])){
+                $pase_url['path'] = '';
+            }
+            if($num > 0){
+                $page_append = '';
+                if(substr($pase_url,strlen($pase_url) - 1) != '/'){
+                    $page_append .= '/';
+                }
+                if (strstr($this->param_name, '%d')) {
+                    $page_append .= sprintf($this->param_name,$num);
+                }else{
+                    $page_append .= $this->param_name.'/'.$num;
+                }
+                $pase_url['path'] .= $page_append;
+            }
+        }
+        return $this->unparse_url($pase_url);
+    }
+
+    private function unparse_url($parsed_url) {
+        $scheme   = isset($parsed_url['scheme']) ? $parsed_url['scheme'] . '://' : '';
+        $host     = isset($parsed_url['host']) ? $parsed_url['host'] : '';
+        $port     = isset($parsed_url['port']) ? ':' . $parsed_url['port'] : '';
+        $user     = isset($parsed_url['user']) ? $parsed_url['user'] : '';
+        $pass     = isset($parsed_url['pass']) ? ':' . $parsed_url['pass']  : '';
+        $pass     = ($user || $pass) ? "$pass@" : '';
+        $path     = isset($parsed_url['path']) ? $parsed_url['path'] : '';
+        $query    = isset($parsed_url['query']) ? '?' . $parsed_url['query'] : '';
+        $fragment = isset($parsed_url['fragment']) ? '#' . $parsed_url['fragment'] : '';
+        return "$scheme$user$pass$host$port$path$query$fragment";
     }
 
     /**
