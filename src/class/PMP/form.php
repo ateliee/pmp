@@ -379,8 +379,11 @@ class FormElement{
                 $html = new htmlElement('select',$html_attr,null,false);
                 foreach($list as $k => $v){
                     $opt = array();
-                    if($value == $k){
-                        $opt['selected'] = 'selected';
+                    if($value instanceof Model){
+                        if($value->getId() == $k){
+                            $opt['selected'] = 'selected';
+                        }
+                    }else if($value == $k){
                     }
                     $opt['value'] = $k;
                     $html->addChilds(new htmlElement('option',$opt,$v,false));
