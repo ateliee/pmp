@@ -23,7 +23,7 @@ class FileLoader
             "Accept-Encoding:gzip ,deflate",
             "Accept-Language:ja,en-us;q=0.7,en;q=0.3",
             "Connection:keep-alive",
-            "User-Agent:Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9; rv:26.0) Gecko/20100101 Firefox/26.0"
+            "User-Agent:Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9; rv:26.0) Gecko/20100101 Firefox/26.0",
         );
         $this->options = array(
             CURLOPT_HEADER => false,
