@@ -537,12 +537,14 @@ class Form{
     public function add($name,$type,$attr=array(),$prex=NULL){
         $key = $name;
         if(isset($this->elem[$key])){
+            $value = $this->getValue($key);
             $elm = new FormElement($type,$prex);
             $elm->setAttr(array_merge($this->elem[$key]->getAttr(),$this->makeAttr($name,$type,$attr)));
             if($prex !== NULL){
                 $elm->setPrex($prex);
             }
             $this->addElement($key,$elm);
+            $this->setValue($key,$value);
         }else{
             $elm = new FormElement($type,$prex);
             $elm->setAttr($this->makeAttr($name,$type,$attr));
