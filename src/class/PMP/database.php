@@ -1078,6 +1078,26 @@ class Database{
 
     /**
      * @param $table_name
+     * @return array|bool
+     */
+    public function getTableForeignKey($table_name){
+        $sql = "SHOW CREATE TABLE ".$this->escapeColumn(":TABLE").";";
+        $query = $this->createQuery()->queryExecute($sql,array(
+            "TABLE" => $table_name
+        ));
+        $result = $query->getResult();
+        if($result && isset($result['Create Table'])){
+
+            if(preg_match_all('/CONSTRAINT\s`(.+?)`/',$result['Create Table'],$matchs)){
+                return $matchs[1];
+            }
+            return array();
+        }
+        return false;
+    }
+
+    /**
+     * @param $table_name
      * @param $columns
      * @param array $table_options
      * @return $this
@@ -1324,7 +1344,7 @@ class Database{
             $params = array("TABLE" => $table_name);
             foreach($fields as $k => $v){
                 //if(!$v && !$columns[$k]->getAi() && !$columns[$k]->getDefault()){
-                    //continue;
+                //continue;
                 //}
                 $sql_vals[] = $this->escapeColumn($k)."=".$this->convertColumn($v,$columns[$k])."";
             }

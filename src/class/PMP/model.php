@@ -477,13 +477,15 @@ class Model{
                     continue;
                 }
                 if(preg_match('/^.+_fk$/',$k,$matchs)){
-                    $delete_foreignkey[$k] = $k;
+                    //$delete_foreignkey[$k] = $k;
                     continue;
                 }
                 $delete_indexs[$k] = $k;
             }
+            // get foreignkey
+            $delete_foreignkey = $this->db->getTableForeignKey($table_name);
             // update
-            foreach($delete_foreignkey as $k => $v){
+            foreach($delete_foreignkey as $k){
                 if($this->db->dropForeignKey($table_name,$k) && ($this->db->affectedRows() > 0)){
                     $change_column_num ++;
                 }
