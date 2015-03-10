@@ -318,7 +318,7 @@ class ModelColumn{
      */
     public function setName($name)
     {
-        $this->name = $name;
+        $this->name = strtolower($name);
     }
 
     /**
@@ -380,7 +380,7 @@ class ModelColumn{
                 $this->formenable = false;
             }
         }else{
-            throw new \Exception('not found ModelColumn type key "'.$type.'"');
+            throw new \Exception('Not Found ModelColumn Type Key "'.$type.'"');
         }
     }
 
@@ -429,7 +429,7 @@ class ModelColumn{
         if(is_int($length)){
             $this->length = $length;
         }else{
-            throw new \Exception('not support ModelColumn length value');
+            throw new \Exception('Not Support ModelColumn Length Value');
         }
     }
 
