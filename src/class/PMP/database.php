@@ -175,7 +175,7 @@ class DatabaseColumn{
             throw new DatabaseException('Database Column not select type'.implode(',',$field));
         }
         if(isset($field['reference'])){
-            $name = $this->name.'_fk';
+            $name = strtolower($this->name).'_fk';
             if($field['reference'] instanceof ModelReference){
                 $this->reference = new DatabaseReferencesColumn($name,$field['reference']);
             }else{
