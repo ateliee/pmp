@@ -318,7 +318,7 @@ class ModelColumn{
      */
     public function setName($name)
     {
-        $this->name = strtolower($name);
+        $this->name = $name;
     }
 
     /**
@@ -659,7 +659,7 @@ class ModelColumn{
             $type = self::$TYPE_LONGTEXT;
         }
         $dbcolumn = array(
-            'field' => $this->name,
+            'field' => strtolower($this->name),
             'type' => $type,
             'length' => $length,
             'null' => $this->nullable,
