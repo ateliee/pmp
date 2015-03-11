@@ -384,6 +384,7 @@ class FormElement{
                             $opt['selected'] = 'selected';
                         }
                     }else if($value == $k){
+                        $opt['selected'] = 'selected';
                     }
                     $opt['value'] = $k;
                     $html->addChilds(new htmlElement('option',$opt,$v,false));
