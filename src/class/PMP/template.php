@@ -1100,6 +1100,7 @@ class Template {
         // string
         if (preg_match("/^\"([\s\S]*)\"$/", $node->getName(), $matchs)) {
             $result = (string)$matchs[1];
+            $result = str_replace('\"','"',$result);
         }else if (preg_match("/^'([\s\S]*)'$/", $node->getName(), $matchs)) {
             $result = (string)$matchs[1];
             // array
