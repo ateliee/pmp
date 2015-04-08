@@ -1425,8 +1425,51 @@ class Template {
                     }
                     $result = date($params[0],$time);
                     break;
+                case 'week':
+                    $week_no = -1;
+                    $week = array('日','月','火','水','木','金','土');
+                    if(isset($params[0])){
+                        if(isset($week[$params[0]])) {
+                            $week_no = $params[0];
+                        }else if(is_numeric($params[0]) && ($params[0] > 0)){
+                            $week_no = date('w',$params[0]);
+                        }else if(is_string($params[0])) {
+                            $time = strtotime($params[0]);
+                            if($time > 0){
+                                $week_no = date('w',$time);
+                            }else{
+                                $this->error('week() paramater if date string then strtotime() convert string. '.$params[0].' given.');
+                            }
+                        }else{
+                            $this->error('week() paramater is numeric range(0〜6) or date string. '.$params[0].' given.');
+                        }
+                    }else{
+                        $this->error('week() paramater must be one.');
+                    }
+                    if(isset($week[$week_no])){
+                        $result = $week[$week_no];
+                    }
+                    break;
                 case 'time':
                     $result = time();
+                    break;
+                case 'floor':
+                    if(!isset($params[0]) || !is_numeric($params[0])){
+                        $this->error('floor() paramater must be number.');
+                    }
+                    $result = floor($params[0]);
+                    break;
+                case 'ceil':
+                    if(!isset($params[0]) || !is_numeric($params[0])){
+                        $this->error('floor() paramater must be number.');
+                    }
+                    $result = ceil($params[0]);
+                    break;
+                case 'round':
+                    if(!isset($params[0]) || !is_numeric($params[0])){
+                        $this->error('floor() paramater must be number.');
+                    }
+                    $result = round($params[0]);
                     break;
                 default:
                     $this->error('Error Functions '.$node->getName());
