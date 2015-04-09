@@ -58,6 +58,7 @@ PMP\Template::filter("path",function(){
  * form template function
  */
 \PMP\Template::filter('form_start',function(\PMP\Template $template,$form,$options){
+    $template->getCurrentNode()->setModifierFlag(true);
     if($form instanceof \PMP\FormView){
         $params = array_merge(array(
             'action' => $form->getFormActionUrl(),
@@ -82,6 +83,7 @@ PMP\Template::filter("path",function(){
  * form template function
  */
 \PMP\Template::filter('form_end',function(\PMP\Template $template,$form,$options=array()){
+    $template->getCurrentNode()->setModifierFlag(true);
     if($form instanceof \PMP\FormView){
         $params = array(
             'form_rest' => true,
@@ -109,6 +111,7 @@ PMP\Template::filter("path",function(){
  * form template function
  */
 \PMP\Template::filter('form_rows',function(\PMP\Template $template,$form){
+    $template->getCurrentNode()->setModifierFlag(true);
     $tags = array();
     if($form instanceof \PMP\FormView){
         foreach($form->getElement() as $key => $val){
@@ -120,6 +123,7 @@ PMP\Template::filter("path",function(){
     return implode('',$tags);
 },true);
 \PMP\Template::filter('form_row',function(\PMP\Template $template,$form,$attr=array()){
+    $template->getCurrentNode()->setModifierFlag(true);
     if(!($form instanceof \PMP\FormElement)){
         throw new \PMP\PMPException('form_row() paramater is not instanceof FormElement.');
     }
@@ -130,14 +134,15 @@ PMP\Template::filter("path",function(){
     $tag .= $template->callFilter('form_wedget',$form,$attr);
     return $tag;
 },true);
-\PMP\Template::filter('form_label',function($form,$attr=array()){
+\PMP\Template::filter('form_label',function(\PMP\Template $template,$form,$attr=array()){
+    $template->getCurrentNode()->setModifierFlag(true);
     if(!($form instanceof \PMP\FormElement)){
         throw new \PMP\PMPException('form_label() paramater is not instanceof FormElement.');
     }
     $label = new htmlElement('label',
         array_merge($attr,array('for' => $form->getFormId())),htmlElement::escape($form->getFormLabel()),false);
     return $label;
-});
+},true);
 \PMP\Template::filter('html_element_set',function(\PMP\Template $template,htmlElement $html_element){
     $param = array(
         'tagName' => $html_element->getTagName(),
@@ -161,6 +166,7 @@ PMP\Template::filter("path",function(){
     if(!($form instanceof \PMP\FormElement)){
         throw new \PMP\PMPException('form_wedget() paramater is not instanceof Form.');
     }
+    $template->getCurrentNode()->setModifierFlag(true);
     $form->setOutput(true);
 
     $tag = $form->getTag($attr);
@@ -179,6 +185,7 @@ PMP\Template::filter("path",function(){
     if(!($form instanceof \PMP\FormView)){
         throw new \PMP\PMPException('form_rest() paramater is not instanceof FormView.');
     }
+    $template->getCurrentNode()->setModifierFlag(true);
     $output = '';
     foreach($form->getElement() as $key => $val){
         if(!($val instanceof \PMP\FormElement)){
