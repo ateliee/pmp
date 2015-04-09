@@ -135,6 +135,57 @@ class ModelConnectionColumn{
 }
 
 /**
+ * Class ModelColumnIndex
+ * @package PMP
+ */
+class ModelColumnIndex{
+    /**
+     * @var array
+     */
+    protected $fields;
+
+    /**
+     * @param $fields
+     */
+    function __construct($fields){
+        $this->fields = array();
+        if(is_array($fields)){
+            foreach($fields as $key => $field){
+                $this->addFields($field);
+            }
+        }else{
+            $this->addFields($fields);
+        }
+        if(count($this) <= 0){
+            throw new \Exception('Must Be ModelColumnIndex "field" > 0.');
+        }
+    }
+
+    /**
+     * @param $field
+     */
+    public function addFields($field){
+        $this->fields[$field] = $field;
+    }
+
+    /**
+     * @return array
+     */
+    public function getFields()
+    {
+        return $this->fields;
+    }
+
+    /**
+     * @return string
+     */
+    public function generateName(){
+        $name = 'idx_'.implode('_',$this->fields);
+        return $name;
+    }
+}
+
+/**
  * Class ModelColumn
  * @package PMP
  */

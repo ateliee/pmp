@@ -18,6 +18,10 @@ class Model{
      * @var ModelColumn[]
      */
     private $table_fields;
+    /**
+     * @var ModelIndex[]
+     */
+    private $table_indexs;
 
     static private $from_connection = array();
 
@@ -27,6 +31,7 @@ class Model{
             "engine" => Database::ENGINE_DEFAULT
         );
         $this->table_fields = array();
+        $this->table_indexs = array();
         $parents_class = class_parents($this);
         $class_name = get_class($this);
         $class = array_merge($parents_class,array($class_name => $class_name));
@@ -61,6 +66,20 @@ class Model{
                     }else{
                         throw new PMPException($class_name.'->'.$v.'() must be return ModelColumn');
                     }
+                }
+            }
+        }
+        $v = 'getIndexs';
+        if(is_callable(array($this,$v))){
+            $res = $this->{$v}();
+            if(!is_array($res)){
+                $res = array($res);
+            }
+            foreach($res as $val){
+                if($val instanceof ModelColumnIndex){
+                    $this->table_indexs[] = $val;
+                }else{
+                    throw new PMPException($class_name.'->'.$v.'() must be return ModelColumnIndex or ModelColumnIndex[]');
                 }
             }
         }
@@ -102,6 +121,17 @@ class Model{
             if(!$colum->isCompareColumn()){
                 $fields[$key] = $colum->getDBColumn();
             }
+        }
+        return $fields;
+    }
+
+    /**
+     * @return array|ModelIndex[]
+     */
+    private function getIndexColumns(){
+        $fields = array();
+        foreach($this->table_indexs as $key => $colum){
+            $fields[$colum->generateName()] = $colum;
         }
         return $fields;
     }
@@ -451,10 +481,12 @@ class Model{
         $table_name = $this->getTableName();
 
         $columns = $this->getDBColumns();
+        $index_columns = $this->getIndexColumns();
         if($this->db->checkTableExists($table_name)){
             $results = $this->db->getTableColumns($table_name);
             $results_index = $this->db->getTableIndex($table_name);
             $add_columns = array();
+            $add_index_columns = array();
             $change_columns = array();
             $delete_columns = array();
             $delete_indexs = array();
@@ -472,6 +504,13 @@ class Model{
                     $delete_columns[$k] = $v;
                 }
             }
+            foreach($index_columns as $k => $v){
+                if(isset($results_index[$k])){
+                    //$change_columns[$k] = $v;
+                }else{
+                    $add_index_columns[$k] = $v;
+                }
+            }
             foreach($results_index as $k){
                 if($k == "PRIMARY"){
                     continue;
@@ -480,7 +519,9 @@ class Model{
                     //$delete_foreignkey[$k] = $k;
                     continue;
                 }
-                $delete_indexs[$k] = $k;
+                if(!isset($index_columns[$k])){
+                    $delete_indexs[$k] = $k;
+                }
             }
             // get foreignkey
             $delete_foreignkey = $this->db->getTableForeignKey($table_name);
@@ -509,6 +550,15 @@ class Model{
                 $current_key = array_search($k,$columns_keys);
                 if($this->db->alterTableAdd(
                         $table_name,$k,$v,($current_key > 0 ? $this->db->escapeColumn($columns_keys[$current_key - 1]) : "FIRST"))
+                    &&
+                    ($this->db->affectedRows() > 0)
+                ){
+                    $change_column_num ++;
+                }
+            }
+            foreach($add_index_columns as $k => $v){
+                if($this->db->alterTableAddIndex(
+                        $table_name,$v->generateName(),$v->getFields())
                     &&
                     ($this->db->affectedRows() > 0)
                 ){

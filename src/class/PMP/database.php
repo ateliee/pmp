@@ -1419,6 +1419,16 @@ class Database{
     /**
      * @param $table_name
      * @param $name
+     * @param $columns
+     * @return Database
+     */
+    public function alterTableAddIndex($table_name,$name,$columns){
+        return $this->alterTable("ADD INDEX",$table_name,$name,null,'('.implode(',',$columns).')');
+    }
+
+    /**
+     * @param $table_name
+     * @param $name
      * @return mixed
      */
     public function alterTableDropIndex($table_name,$name){
