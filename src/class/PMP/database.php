@@ -1423,7 +1423,11 @@ class Database{
      * @return Database
      */
     public function alterTableAddIndex($table_name,$name,$columns){
-        return $this->alterTable("ADD INDEX",$table_name,$name,null,'('.implode(',',$columns).')');
+        $clms = array();
+        foreach($columns as $c){
+            $clms[] = $this->escapeColumn($c);
+        }
+        return $this->alterTable("ADD INDEX",$table_name,$name,null,'('.implode(',',$clms).')');
     }
 
     /**
