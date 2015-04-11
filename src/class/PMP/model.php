@@ -438,6 +438,9 @@ class Model{
         return $this;
     }
 
+    var $tmp_args;
+    var $tmp_method_call;
+    var $tmp_db_data;
     /**
      * @param $args
      * @param bool $method_call
@@ -448,9 +451,9 @@ class Model{
     public function setArray($args,$method_call = true,$db_data=false)
     {
         if(is_array($args)){
-            foreach($args as $k => $v){
-                $this->set($k,$v,$method_call,$db_data);
-            }
+            $this->tmp_args = $args;
+            $this->tmp_method_call = $method_call;
+            $this->tmp_db_data = $db_data;
         }else{
             throw new PMPException('Model->setArray() args.');
         }
@@ -618,6 +621,11 @@ class Model{
      */
     function __get($name)
     {
+        if($this->tmp_args){
+            foreach($this->tmp_args as $k => $v){
+                $this->set($k,$v,$this->tmp_method_call,$this->tmp_db_data);
+            }
+        }
         $method_name = 'get'.ucfirst($name);
         if(method_exists(get_class($this),$method_name)){
             return $this->$method_name();
