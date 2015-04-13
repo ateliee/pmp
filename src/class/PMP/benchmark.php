@@ -2,11 +2,48 @@
 namespace PMP;
 
 /**
+ * Class BenchmarkStamp
+ * @package PMP
+ */
+class BenchmarkStamp{
+    private $name;
+    private $time;
+
+    function __construct($name,$time)
+    {
+        $this->name = $name;
+        $this->time = $time;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getTime()
+    {
+        return $this->time;
+    }
+
+
+}
+
+/**
  * Class Benchmark
+ * @package PMP
  */
 class Benchmark{
     private $time_start;
     private $time_end;
+    /**
+     * @var BenchmarkStamp[]
+     */
     private $marker;
 
     function __construct(){
@@ -27,28 +64,28 @@ class Benchmark{
      * @return int
      */
     public function setMark($name){
-        $this->marker[$name] = microtime(true);
-        return $this->getTime($name);
+        $this->marker[] = new BenchmarkStamp($name,microtime(true));
+        return $this->getTime(count($this->marker) - 1);
     }
 
     /**
-     * @param $name
+     * @param $key
      * @param null $start_key
-     * @return int
+     * @return mixed
      */
-    protected function getTime($name,$start_key=null){
-        $time_start = ($start_key === null) ? $this->time_start : $this->getMark($start_key);
-        $time_end = $this->getMark($name);
+    protected function getTime($key,$start_key=null){
+        $time_start = ($start_key === null) ? $this->time_start : $this->getMark(0)->getTime();
+        $time_end = $this->getMark($key)->getTime();
         return ($time_end - $time_start);
     }
 
     /**
-     * @param $name
-     * @return null
+     * @param $key
+     * @return null|BenchmarkStamp
      */
-    protected function getMark($name){
-        if(isset($this->marker[$name])){
-            return $this->marker[$name];
+    protected function getMark($key){
+        if(isset($this->marker[$key])){
+            return $this->marker[$key];
         }
         return null;
     }
@@ -66,32 +103,32 @@ class Benchmark{
      */
     public function display($diplay=true){
         $param = array();
-        $param[] = array("name" => "Start","time" => $this->time_start);
+        $param[] = new BenchmarkStamp('Start',$this->time_start);
         foreach($this->marker as $key => $val){
-            $param[] = array("name" => $key,"time" => $val);
+            $param[] = $val;
         }
-        $param[] = array("name" => "Stop","time" => $this->time_end);
+        $param[] = new BenchmarkStamp('Stop',$this->time_start);
         $total = ($this->time_end - $this->time_start);
 
         $html = '';
         $html .= '<table>'."\n";
         $html .= '<tr>'."\n";
-            $html .= '<th></th>'."\n";
-            $html .= '<th>time index</th>'."\n";
-            $html .= '<th>ex time</th>'."\n";
-            $html .= '<th>%</th>'."\n";
+        $html .= '<th></th>'."\n";
+        $html .= '<th>time index</th>'."\n";
+        $html .= '<th>ex time</th>'."\n";
+        $html .= '<th>%</th>'."\n";
         $html .= '</tr>'."\n";
         $before = 0;
         foreach($param as $key => $val){
-            $time = ($before ? (($val["time"] != $before) ? ($val["time"] - $before) : 0) : 0);
-            $p = ($time ? (($val["time"] != $before) ? (($time / $total) * 100) : 100) : 0);
+            $time = ($before ? (($val->getTime() != $before) ? ($val->getTime() - $before) : 0) : 0);
+            $p = ($time ? (($val->getTime() != $before) ? (($time / $total) * 100) : 100) : 0);
             $html .= '<tr>'."\n";
-                $html .= '<th>'.$val["name"].'</th>'."\n";
-                $html .= '<td>'.$val["time"].'</td>'."\n";
-                $html .= '<td>'.($time ? $time : "-").'</td>'."\n";
-                $html .= '<td>'.round($p,2).'%</td>'."\n";
+            $html .= '<th>'.$val->getName().'</th>'."\n";
+            $html .= '<td>'.$val->getTime().'</td>'."\n";
+            $html .= '<td>'.($time ? $time : "-").'</td>'."\n";
+            $html .= '<td>'.round($p,2).'%</td>'."\n";
             $html .= '</tr>'."\n";
-            $before = $val["time"];
+            $before = $val->getTime();
         }
         $html .= '</table>';
 
