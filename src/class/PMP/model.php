@@ -624,14 +624,16 @@ class Model{
         }else if(property_exists(get_class($this),$name)){
             if($this->isExists($name)){
                 $column = $this->getColumn($name);
-                if($this->$name instanceof Model_Query){
-                    $this->$name = $this->$name->getResults();
-                }else if($column->getConnection()){
+                if(!($this->$name instanceof Model) && $column->getConnection()){
                     $target_name = $column->getConnection()->getTargetName();
                     $target_column = $column->getConnection()->getTargetColumn();
                     $model = new $target_name();
                     $model->find(array($target_column => $this->$name));
-                    return $model;
+                    $this->$name = $model;
+                    return $this->$name;
+                }
+                if($this->$name instanceof Model_Query){
+                    $this->$name = $this->$name->getResults();
                 }
             }
             return $this->$name;
