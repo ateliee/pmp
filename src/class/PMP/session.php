@@ -16,7 +16,7 @@ class Session
     static function start()
     {
         if(!self::isStart()){
-            session_start();
+            @session_start();
             self::init();
         }
     }
@@ -54,9 +54,9 @@ class Session
     static function regenerate_id()
     {
         $tmp = $_SESSION;
-        session_destroy();
-        session_id(md5(uniqid(rand(), true)));
-        session_start();
+        @session_destroy();
+        @session_id(md5(uniqid(rand(), true)));
+        @session_start();
         $_SESSION = $tmp;
     }
 

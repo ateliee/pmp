@@ -30,8 +30,6 @@ class Model{
         $this->table_options = array(
             "engine" => Database::ENGINE_DEFAULT
         );
-        $this->table_fields = array();
-        $this->table_indexs = array();
         $parents_class = class_parents($this);
         $class_name = get_class($this);
         $class = array_merge($parents_class,array($class_name => $class_name));
@@ -69,20 +67,6 @@ class Model{
                 }
             }
         }
-        $v = 'getIndexs';
-        if(is_callable(array($this,$v))){
-            $res = $this->{$v}();
-            if(!is_array($res)){
-                $res = array($res);
-            }
-            foreach($res as $val){
-                if($val instanceof ModelColumnIndex){
-                    $this->table_indexs[] = $val;
-                }else{
-                    throw new PMPException($class_name.'->'.$v.'() must be return ModelColumnIndex or ModelColumnIndex[]');
-                }
-            }
-        }
     }
 
     /**
@@ -109,6 +93,9 @@ class Model{
      * @return ModelColumn[]
      */
     public function getColumns(){
+        if(!$this->table_fields){
+
+        }
         return $this->table_fields;
     }
 
@@ -117,7 +104,7 @@ class Model{
      */
     private function getDBColumns(){
         $fields = array();
-        foreach($this->table_fields as $key => $colum){
+        foreach($this->getColumns() as $key => $colum){
             if(!$colum->isCompareColumn()){
                 $fields[$key] = $colum->getDBColumn();
             }
@@ -129,6 +116,24 @@ class Model{
      * @return array|ModelIndex[]
      */
     private function getIndexColumns(){
+        if(!$this->table_indexs){
+            $this->table_indexs = array();
+            $v = 'getIndexs';
+            if(is_callable(array($this,$v))){
+                $res = $this->{$v}();
+                if(!is_array($res)){
+                    $res = array($res);
+                }
+                foreach($res as $val){
+                    if($val instanceof ModelColumnIndex){
+                        $this->table_indexs[] = $val;
+                    }else{
+                        $class_name = get_class($this);
+                        throw new PMPException($class_name.'->'.$v.'() must be return ModelColumnIndex or ModelColumnIndex[]');
+                    }
+                }
+            }
+        }
         $fields = array();
         foreach($this->table_indexs as $key => $colum){
             $fields[$colum->generateName()] = $colum;
@@ -159,7 +164,7 @@ class Model{
      * @return bool
      */
     public function isExists($key){
-        return (array_key_exists($key,$this->table_fields) ? true : false);
+        return (array_key_exists($key,$this->getColumns()) ? true : false);
     }
 
     /**
@@ -167,8 +172,8 @@ class Model{
      * @return ModelColumn
      */
     public function getColumn($key){
-        if(isset($this->table_fields[$key])){
-            return $this->table_fields[$key];
+        if(isset($this->getColumns()[$key])){
+            return $this->getColumns()[$key];
         }
         throw new \Exception(sprintf('"%s" Column Not Found "%s".',get_class($this),$key));
     }
