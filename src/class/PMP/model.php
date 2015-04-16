@@ -172,8 +172,9 @@ class Model{
      * @return ModelColumn
      */
     public function getColumn($key){
-        if(isset($this->getColumns()[$key])){
-            return $this->getColumns()[$key];
+        $columns = $this->getColumns();
+        if($columns && isset($columns[$key])){
+            return $columns[$key];
         }
         throw new \Exception(sprintf('"%s" Column Not Found "%s".',get_class($this),$key));
     }
