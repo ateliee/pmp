@@ -23,6 +23,7 @@ class Model{
      */
     private $table_indexs;
 
+    static private $class_fields = array();
     static private $from_connection = array();
 
     function  __construct(){
@@ -33,37 +34,51 @@ class Model{
         $parents_class = class_parents($this);
         $class_name = get_class($this);
         $class = array_merge($parents_class,array($class_name => $class_name));
-        foreach($class as $class_name){
-            $vars = get_class_vars($class_name);
-            foreach($vars as $k => $v){
-                $method_name = str_replace('_','',$k);
-                if(method_exists($this,$method_name.'Column')){
-                    $v = $method_name.'Column';
-                    $key = $k;
-                    try{
-                        $field = ($this->{$v}());
-                    }catch (PMPException $e){
-                        throw new PMPException($class_name.'->'.$v.'() is return value error.'.$e->getMessage());
-                    }
-                    if($field && is_object($field) && ($field instanceof ModelColumn)){
-                        if(!$field->getName()){
-                            $field->setName($key);
-                        }
-                        $this->table_fields[$key] = $field;
 
-                        if($field->isCompareColumn()){
-                            $self = $field->getSelfColumn();
-                            if(!isset(self::$from_connection[$class_name])){
-                                self::$from_connection[$class_name] = array();
-                            }
-                            if(!isset(self::$from_connection[$class_name][$self])){
-                                self::$from_connection[$class_name][$self] = array();
-                            }
-                            self::$from_connection[$class_name][$self][$k] = $k;
+        $this->table_fields = array();
+        foreach($class as $class_name){
+            $fields = null;
+            if(isset(self::$class_fields[$class_name])){
+                $fields = self::$class_fields[$class_name];
+            }else{
+                $fields = array();
+                $vars = get_class_vars($class_name);
+                foreach($vars as $k => $v){
+                    $method_name = str_replace('_','',$k);
+                    if(method_exists($this,$method_name.'Column')){
+                        $v = $method_name.'Column';
+                        $key = $k;
+                        try{
+                            $field = ($this->{$v}());
+                        }catch (PMPException $e){
+                            throw new PMPException($class_name.'->'.$v.'() is return value error.'.$e->getMessage());
                         }
-                    }else{
-                        throw new PMPException($class_name.'->'.$v.'() must be return ModelColumn');
+                        if($field && is_object($field) && ($field instanceof ModelColumn)){
+                            if(!$field->getName()){
+                                $field->setName($key);
+                            }
+                            $fields[$key] = $field;
+
+                            if($field->isCompareColumn()){
+                                $self = $field->getSelfColumn();
+                                if(!isset(self::$from_connection[$class_name])){
+                                    self::$from_connection[$class_name] = array();
+                                }
+                                if(!isset(self::$from_connection[$class_name][$self])){
+                                    self::$from_connection[$class_name][$self] = array();
+                                }
+                                self::$from_connection[$class_name][$self][$k] = $k;
+                            }
+                        }else{
+                            throw new PMPException($class_name.'->'.$v.'() must be return ModelColumn');
+                        }
                     }
+                }
+                self::$class_fields[$class_name] = $fields;
+            }
+            if($fields){
+                foreach($fields as $k => $f){
+                    $this->table_fields[$k] = $f;
                 }
             }
         }
