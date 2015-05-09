@@ -1,6 +1,85 @@
 <?php
 namespace PMP;
 
+class ModelValue{
+    private $value;
+    private $column;
+    private $db_data;
+    private $method_call;
+    private $converted;
+
+    function  __construct($value,ModelColumn $column,$db_data=true,$method_call=true){
+        $this->value = $value;
+        $this->column = $column;
+        $this->db_data = $db_data;
+        $this->method_call = $method_call;
+        $this->converted = false;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function getMethodCall()
+    {
+        return $this->method_call;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function get(){
+        if(!$this->converted){
+            $this->value = $this->convert();
+            $this->converted = true;
+        }
+        return $this->value;
+    }
+
+    /**
+     * @return mixed
+     */
+    protected function convert(){
+        $value = $this->value;
+
+        if(in_array($this->column->getType(),array(ModelColumn::$TYPE_DATE))){
+            $value = new \PMP\Date($value);
+        }else if(in_array($this->column->getType(),array(ModelColumn::$TYPE_DATETIME,ModelColumn::$TYPE_TIMESTAMP))){
+            $value = new \PMP\DateTime($value);
+        }
+        if($this->db_data){
+            $value = $this->column->getConvertValue($value);
+            if($this->column->getType() == ModelColumn::$TYPE_BOOLEAN){
+                $value = intval($value);
+            }else if($this->column->getType() == ModelColumn::$TYPE_ARRAY){
+                $v = array();
+                if($value != ''){
+                    $arr = explode(Model::$DB_ARRAY_SPACER,$value);
+                    array_shift($arr);
+                    array_pop($arr);
+                    foreach($arr as $vv){
+                        $v[] = $vv;
+                    }
+                }
+                $value = $v;
+            }else if($this->column->getType() == ModelColumn::$TYPE_DATA){
+                $value = null;
+                if($value){
+                    $value = unserialize($value);
+                }
+            }
+        }
+
+        return $value;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function __toString(){
+        return $this->get();
+    }
+}
+
 /**
  * Class Model
  * @package PMP
@@ -101,7 +180,7 @@ class Model{
      * @return mixed
      */
     public function getId(){
-        return $this->id;
+        return $this->getVal('id');
     }
 
     /**
@@ -109,7 +188,7 @@ class Model{
      */
     public function getColumns(){
         if(!$this->table_fields){
-
+            throw new PMPException(sprintf('"%s" Model Columns Not Installed.',get_class($this)));
         }
         return $this->table_fields;
     }
@@ -187,9 +266,8 @@ class Model{
      * @return ModelColumn
      */
     public function getColumn($key){
-        $columns = $this->getColumns();
-        if($columns && isset($columns[$key])){
-            return $columns[$key];
+        if(isset($this->getColumns()[$key])){
+            return $this->getColumns()[$key];
         }
         throw new \Exception(sprintf('"%s" Column Not Found "%s".',get_class($this),$key));
     }
@@ -217,6 +295,9 @@ class Model{
      * @return $this|null
      */
     public function find($args,$first_set=false){
+        if($args instanceof Model){
+            $args = $args->getId();
+        }
         $params = array();
         if(is_numeric($args)){
             $params = array('id' => $args);
@@ -229,7 +310,7 @@ class Model{
                 }
             }
         }else{
-            throw new \Exception('find() Paramater Must Be number or array.');
+            throw new PMPException('find() Paramater Must Be number or array.');
         }
         if($first_set){
             $results = $this->findQuery($params)->getResults();
@@ -261,7 +342,7 @@ class Model{
     public function toArray(){
         $columns = array();
         foreach($this->getColumns() as $k => $v){
-            $vv = $this->{$k};
+            $vv = $this->get($k);
             if($vv instanceof Model){
                 $columns[$k] = $vv->getId();
             }else{
@@ -280,7 +361,7 @@ class Model{
             if($v->isCompareColumn()){
                 continue;
             }
-            $vv = $this->{$k};
+            $vv = $this->get($k);
             if($vv instanceof Model){
                 $columns[$k] = $vv->getId();
             }else if($v->getType() == ModelColumn::$TYPE_ARRAY){
@@ -391,71 +472,8 @@ class Model{
      */
     public function set($key,$val,$method_call = true,$db_data=false)
     {
-        if(is_string($key)){
-            $column = null;
-            try{
-                $column = $this->getColumn($key);
-            }catch (\Exception $e){
-            }
-            if($column){
-                if(in_array($column->getType(),array(ModelColumn::$TYPE_DATE))){
-                    $val = new \PMP\Date($val);
-                }else if(in_array($column->getType(),array(ModelColumn::$TYPE_DATETIME,ModelColumn::$TYPE_TIMESTAMP))){
-                    $val = new \PMP\DateTime($val);
-                }
-
-                $method = "set".ucfirst($key);
-                if($method_call && method_exists($this,$method)){
-                    $this->$method($val);
-                }else if(property_exists($this,$key)){
-                    if($db_data){
-                        $val = $column->getConvertValue($val);
-                        if($column->getType() == ModelColumn::$TYPE_BOOLEAN){
-                            $this->{$key} = intval($val);
-                        }else if($column->getType() == ModelColumn::$TYPE_ARRAY){
-                            $v = array();
-                            if($val != ''){
-                                $arr = explode(self::$DB_ARRAY_SPACER,$val);
-                                array_shift($arr);
-                                array_pop($arr);
-                                foreach($arr as $vv){
-                                    $v[] = $vv;
-                                }
-                            }
-                            $this->{$key} = $v;
-                        }else if($column->getType() == ModelColumn::$TYPE_DATA){
-                            $v = null;
-                            if($val){
-                                $v = unserialize($val);
-                            }
-                            $this->{$key} = $v;
-                        }else{
-                            $this->{$key} = $val;
-                        }
-                    }else{
-                        $this->{$key} = $val;
-                    }
-                }
-                $class = get_class($this);
-                if(isset(self::$from_connection[$class][$key])){
-                    foreach(self::$from_connection[$class][$key] as $k => $vv){
-                        $c = $this->getColumn($k);
-                        if($c->isCompareColumn()){
-                            $mm = new ModelManager();
-                            $v = $mm->createQuery($c->getTargetName(),'p')
-                                ->where('`p`.`'.$c->getTargetColumn().'`=:key')
-                                ->setParamater('key',$this->{$key});
-                            if($c->getTargetOrder()){
-                                $v->order($c->getTargetOrder(),$c->getTargetSort());
-                            }
-                            $this->{$k} = $v;
-                        }
-                    }
-                }
-            }
-        }else{
-            throw new PMPException('Model->set() args.');
-        }
+        $column = $this->getColumn($key);
+        $this->{$key} = new ModelValue($val,$column,$db_data,$method_call);
         return $this;
     }
 
@@ -484,13 +502,68 @@ class Model{
      */
     public function get($key)
     {
+        $get = $this->getVal($key);
         $method = 'get'.ucfirst($key);
         if(method_exists($this,$method)){
             $get = $this->{$method}();
-        }else{
-            $get = $this->{$key};
         }
         return $get;
+    }
+
+    /**
+     * @param $key
+     * @return mixed
+     * @throws PMPException
+     */
+    protected function getVal($key){
+        if(property_exists(($this),$key)){
+            if($this->{$key} instanceof ModelValue){
+                $val = $this->{$key};
+                $method_call = $val->getMethodCall();
+                $val = $val->get();
+
+                $method = "set".ucfirst($key);
+                if($method_call && method_exists($this,$method)){
+                    $this->$method($val);
+                }else{
+                    $this->{$key} = $val;
+                }
+            }
+            if($this->isExists($key)){
+                $column = $this->getColumn($key);
+                if(!($this->$key instanceof Model) && $column->getConnection()){
+                    $target_name = $column->getConnection()->getTargetName();
+                    $target_column = $column->getConnection()->getTargetColumn();
+                    $model = new $target_name();
+                    $model->find(array($target_column => $this->$key));
+                    $this->$key = $model;
+                    return $this->$key;
+                }
+                if($this->$key instanceof Model_Query){
+                    $this->$key = $this->$key->getResults();
+                }
+            }
+            /*
+            $class = get_class($this);
+            if(isset(self::$from_connection[$class][$key])){
+                foreach(self::$from_connection[$class][$key] as $k => $vv){
+                    $c = $this->getColumn($k);
+                    if($c->isCompareColumn()){
+                        $mm = new ModelManager();
+                        $v = $mm->createQuery($c->getTargetName(),'p')
+                            ->where('`p`.`'.$c->getTargetColumn().'`=:key')
+                            ->setParamater('key',$this->get($key));
+                        if($c->getTargetOrder()){
+                            $v->order($c->getTargetOrder(),$c->getTargetSort());
+                        }
+                        $this->{$k} = $v;
+                    }
+                }
+            }*/
+            return $this->{$key};
+        }else{
+            throw new PMPException(sprintf('"%s" Model Columns Not Found "%s".',get_class($this),$key));
+        }
     }
 
     /**
@@ -634,31 +707,11 @@ class Model{
     }
 
     /**
-     * @param $name
+     * @param $key
      * @return mixed
      */
-    function __get($name)
+    function __get($key)
     {
-        $method_name = 'get'.ucfirst($name);
-        if(method_exists(get_class($this),$method_name)){
-            return $this->$method_name();
-        }else if(property_exists(get_class($this),$name)){
-            if($this->isExists($name)){
-                $column = $this->getColumn($name);
-                if(!($this->$name instanceof Model) && $column->getConnection()){
-                    $target_name = $column->getConnection()->getTargetName();
-                    $target_column = $column->getConnection()->getTargetColumn();
-                    $model = new $target_name();
-                    $model->find(array($target_column => $this->$name));
-                    $this->$name = $model;
-                    return $this->$name;
-                }
-                if($this->$name instanceof Model_Query){
-                    $this->$name = $this->$name->getResults();
-                }
-            }
-            return $this->$name;
-        }
-        trigger_error(sprintf('Undefined property %s:%s',get_class($this),$name));
+        return $this->get($key);
     }
 }

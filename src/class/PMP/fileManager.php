@@ -105,7 +105,7 @@ class FileManager
     static public function mkDir($dir,$perm=0777,$recursive=false)
     {
         if(!is_dir($dir)){
-            mkdir($dir,$perm,$recursive);
+            @mkdir($dir,$perm,$recursive);
             return true;
         }
         return false;
