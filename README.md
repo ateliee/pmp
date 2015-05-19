@@ -47,3 +47,8 @@ require 'vendor/autoload.php';
 /vendor/
 /web/
 ```
+
+# TODO
+* model index column
+* command support
+* install command
