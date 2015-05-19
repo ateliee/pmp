@@ -1067,6 +1067,9 @@ class Database{
             $list = array();
             foreach($results as $value){
                 if(isset($value["Key_name"])){
+                    if($value["Non_unique"] == 0){
+                        continue;
+                    }
                     $key = $value["Key_name"];
                     $list[$key] = $key;
                 }
