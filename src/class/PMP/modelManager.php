@@ -644,7 +644,7 @@ class Model_Query extends Model_QueryBase
     }
 
     /**
-     * @return array
+     * @return Model[]
      */
     public function getResults()
     {
