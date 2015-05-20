@@ -582,11 +582,13 @@ class Model_Query extends Model_QueryBase
             }
         }
         $params = array();
-        foreach($this->params as $key => $p){
-            if($p instanceof Model){
-                $params[$key] = $p->getId();
-            }else{
-                $params[$key] = $p;
+        if($this->params){
+            foreach($this->params as $key => $p){
+                if($p instanceof Model){
+                    $params[$key] = $p->getId();
+                }else{
+                    $params[$key] = $p;
+                }
             }
         }
         return $this->query->execute($params);
