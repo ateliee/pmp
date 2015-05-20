@@ -542,9 +542,9 @@ class Model_Query extends Model_QueryBase
                 $this->query->find($this->finds);
             }else{
                 $p = $this->getModelFind();
-                foreach($this->subquery as $q){
+                /*foreach($this->subquery as $q){
                     $p += $q->getModelFind();
-                }
+                }*/
                 $this->query->find($p);
             }
         }else{
@@ -649,7 +649,10 @@ class Model_Query extends Model_QueryBase
     public function getResultOne($default=null)
     {
         if($results = $this->getArrayFirstResult()){
-            return reset($results);
+            $res = reset($results);
+            $model = new $this->model_name;
+            $model->setArray($res,true,true);
+            return $model;
         }
         return $default;
     }
