@@ -194,7 +194,7 @@ class Model{
     }
 
     /**
-     * @return array
+     * @return DatabaseColumn[]
      */
     private function getDBColumns(){
         $fields = array();
@@ -204,6 +204,20 @@ class Model{
             }
         }
         return $fields;
+    }
+
+    /**
+     * @return DatabaseColumn[]
+     */
+    private function getDBReferenceColumn(){
+        $results = array();
+        $columns = $this->getDBColumns();
+        foreach($columns as $column){
+            if($column->getReference()){
+                $results[$column->getReference()->getName()] = $column;
+            }
+        }
+        return $results;
     }
 
     /**
@@ -576,9 +590,11 @@ class Model{
 
         $columns = $this->getDBColumns();
         $index_columns = $this->getIndexColumns();
+        $reference_columns = $this->getDBReferenceColumn();
         if($this->db->checkTableExists($table_name)){
             $results = $this->db->getTableColumns($table_name);
             $results_index = $this->db->getTableIndex($table_name);
+            //$results_foreignkey = $this->db->getTableForeignKey($table_name);
             $add_columns = array();
             $add_index_columns = array();
             $change_columns = array();
@@ -588,7 +604,9 @@ class Model{
             $columns_keys = array_keys($columns);
             foreach($columns as $k => $v){
                 if(isset($results[$k])){
-                    $change_columns[$k] = $v;
+                    if(!$v->isEqual($results[$k])){
+                        $change_columns[$k] = $v;
+                    }
                 }else{
                     $add_columns[$k] = $v;
                 }
@@ -609,16 +627,16 @@ class Model{
                 if($k == "PRIMARY"){
                     continue;
                 }
-                if(preg_match('/^.+_fk$/',$k,$matchs)){
-                    //$delete_foreignkey[$k] = $k;
+                if(preg_match('/^(.+_fk)$/',$k,$matchs)){
+                    if(!preg_match('/^(.+)_(.+_fk)$/',$matchs[1],$mt) || !isset($reference_columns[$mt[2]])){
+                        $delete_foreignkey[$k] = $k;
+                    }
                     continue;
                 }
                 if(!isset($index_columns[$k])){
                     $delete_indexs[$k] = $k;
                 }
             }
-            // get foreignkey
-            $delete_foreignkey = $this->db->getTableForeignKey($table_name);
             // update
             foreach($delete_foreignkey as $k){
                 if($this->db->dropForeignKey($table_name,$k) && ($this->db->affectedRows() > 0)){
@@ -678,20 +696,23 @@ class Model{
     {
         $change_column_num = 0;
         $table_name = $this->getTableName();
-        $columns = $this->getDBColumns();
-        foreach($columns as $column){
-            if($column->getReference()){
-                if($this->db->addForeignKey(
-                    $table_name,
-                    $table_name.'_'.$column->getReference()->getName(),
-                    $column->getName(),
-                    $column->getReference()->getTableName(),
-                    $column->getReference()->getColumn(),
-                    $column->getReference()->getDelete(),
-                    $column->getReference()->getUpdate()
-                )){
-                    $change_column_num ++;
-                }
+        $reference_columns = $this->getDBReferenceColumn();
+        $results_foreignkey = $this->db->getTableForeignKey($table_name);
+        foreach($reference_columns as $column){
+            $key_name = $table_name.'_'.$column->getReference()->getName();
+            if(array_search($key_name,$results_foreignkey) !== null){
+                continue;
+            }
+            if($this->db->addForeignKey(
+                $table_name,
+                $key_name,
+                $column->getName(),
+                $column->getReference()->getTableName(),
+                $column->getReference()->getColumn(),
+                $column->getReference()->getDelete(),
+                $column->getReference()->getUpdate()
+            )){
+                $change_column_num ++;
             }
         }
         return $change_column_num;

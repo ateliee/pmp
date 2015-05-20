@@ -501,6 +501,14 @@ class ModelColumn{
     }
 
     /**
+     * @return mixed
+     */
+    public function getUnique()
+    {
+        return $this->unique;
+    }
+
+    /**
      * @param bool $unique
      */
     protected function setUnique($unique)
@@ -554,6 +562,14 @@ class ModelColumn{
     protected function setAi($ai)
     {
         $this->ai = $ai;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function getDefault()
+    {
+        return $this->default;
     }
 
     /**
@@ -701,7 +717,9 @@ class ModelColumn{
     {
         $type = $this->type;
         $length = $this->length;
-        if($type == self::$TYPE_URL){
+        if($type == self::$TYPE_BOOLEAN){
+            $type = self::$TYPE_TINYINT;
+        }else if($type == self::$TYPE_URL){
             $type = self::$TYPE_VARCHAR;
             $length = 250;
         }else if($type == self::$TYPE_ARRAY){
@@ -710,7 +728,7 @@ class ModelColumn{
             $type = self::$TYPE_LONGTEXT;
         }
         $dbcolumn = array(
-            'field' => strtolower($this->name),
+            'field' => ($this->name),
             'type' => $type,
             'length' => $length,
             'null' => $this->nullable,

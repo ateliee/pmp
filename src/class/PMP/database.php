@@ -143,7 +143,6 @@ class DatabaseColumn{
                     $this->null = $v ? true : false;
                 }
             }else if($k == "default"){
-                $this->default_set = true;
                 $this->default = $v;
             }else if($k == "collation"){
                 if($v == "unique"){
@@ -173,6 +172,12 @@ class DatabaseColumn{
             throw new DatabaseException('Database Column not select name '.implode(',',$field));
         }else if($this->type == ''){
             throw new DatabaseException('Database Column not select type'.implode(',',$field));
+        }
+        if(($this->default !== NULL) || $this->null){
+            $this->default_set = true;
+            if($this->null && ($this->default == '')){
+                $this->default = NULL;
+            }
         }
         if(isset($field['reference'])){
             $name = strtolower($this->name).'_fk';
@@ -350,6 +355,40 @@ class DatabaseColumn{
             return $this->options[$key];
         }
         return $default;
+    }
+
+    /**
+     * @param ModelColumn $target
+     * @return bool
+     */
+    public function isEqual(DatabaseColumn $target){
+        if($this->name != $target->getName()){
+            return false;
+        }
+        if($this->type != $target->gettype()){
+            return false;
+        }
+        if($this->isString()){
+            if($this->length != $target->getLength()){
+                return false;
+            }
+        }
+        if($this->ai != $target->getAi()){
+            return false;
+        }
+        if($this->null != $target->getNull()){
+            return false;
+        }
+        if($this->default != $target->getDefault()){
+            return false;
+        }
+        if($this->comment != $target->getComment()){
+            return false;
+        }
+        if($this->ai != $target->getAi()){
+            return false;
+        }
+        return true;
     }
 }
 
@@ -1046,6 +1085,11 @@ class Database{
                         $value["Key"] = "unique";
                     }
                 }
+                if(isset($value["Default"])){
+                    if($value["Default"] == ""){
+                        $value["Default"] = NULL;
+                    }
+                }
                 $list[$key] = new DatabaseColumn($value);
             }
             return $list;
@@ -1466,7 +1510,9 @@ class Database{
             $attr[] = "AUTO_INCREMENT";
         }
         if($field->getDefaultSet()){
-            if($field->isDate() || $field->isString() || $field->isText()){
+            if(($field->getDefault() === NULL) && $field->getNull()){
+                $attr[] = "DEFAULT NULL";
+            }else if($field->isDate() || $field->isString() || $field->isText()){
                 $attr[] = "DEFAULT '".$field->getDefault()."'";
             }else if($field->isInt()){
                 $attr[] = "DEFAULT ".intval($field->getDefault())."";
