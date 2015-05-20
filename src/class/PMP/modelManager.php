@@ -73,9 +73,11 @@ class ModelManager
 class Model_QueryWhere
 {
     protected $where;
+    protected $params;
 
     function __construct($where=null)
     {
+        $this->params = array();
         $this->where = '';
         if($where){
             $this->andWhere($where);
@@ -126,14 +128,19 @@ class Model_QueryWhere
      */
     public function inArray($key,$val)
     {
+        $unique_key = get_class($this);
         if(is_array($val)){
             $w = array();
             foreach($val as $k => $v){
-                $w[] = $key." LIKE '%".Model::$DB_ARRAY_SPACER.$v.Model::$DB_ARRAY_SPACER."%'";
+                $id = $unique_key.'_'.$key.'_'.$k;
+                $w[] = $key." LIKE '%".Model::$DB_ARRAY_SPACER.':'.$id.Model::$DB_ARRAY_SPACER."%'";
+                $this->setParamater($id,$v);
             }
             $this->where(implode(' OR ',$w));
         }else{
-            $this->where($key." LIKE '%".Model::$DB_ARRAY_SPACER.$val.Model::$DB_ARRAY_SPACER."%'");
+            $id = $unique_key.'_'.$key;
+            $this->where($key." LIKE '%".Model::$DB_ARRAY_SPACER.':'.$id.Model::$DB_ARRAY_SPACER."%'");
+            $this->setParamater($id,$val);
         }
         return $this;
     }
@@ -146,10 +153,13 @@ class Model_QueryWhere
      */
     public function in($key,$val)
     {
+        $unique_key = get_class($this);
         if(is_array($val)){
             $w = array();
             foreach($val as $k => $v){
-                $w[] = $key."=".$v;
+                $id = $unique_key.'_'.$key.'_'.$k;
+                $w[] = $key."=':".$id."'";
+                $this->setParamater($id,$v);
             }
             $this->where(implode(' OR ',$w));
         }else{
@@ -185,6 +195,30 @@ class Model_QueryWhere
     function __toString()
     {
         return ($this->where) ? '('.$this->where.')' : '';
+    }
+
+
+    /**
+     * @param $key
+     * @param $val
+     * @return $this
+     */
+    public function setParamater($key,$val)
+    {
+        $this->params[$key] = $val;
+        return $this;
+    }
+
+    /**
+     * @param array $params
+     * @return $this
+     */
+    public function setParamaters(array $params)
+    {
+        foreach($params as $key => $val){
+            $this->setParamater($key,$val);
+        }
+        return $this;
     }
 
 }
@@ -351,7 +385,6 @@ class Model_Query extends Model_QueryBase
     private $group;
     private $start;
     private $limit;
-    private $params;
 
     function __construct($name,Database $db,$alias=null)
     {
@@ -366,7 +399,6 @@ class Model_Query extends Model_QueryBase
         $this->group = null;
         $this->start = null;
         $this->limit = null;
-        $this->params = array();
     }
 
     /**
@@ -480,29 +512,6 @@ class Model_Query extends Model_QueryBase
             $this->limit = func_get_arg(1);
         }else{
             throw new \Exception('Must Be limit() call Paramater 1 or 2.');
-        }
-        return $this;
-    }
-
-    /**
-     * @param $key
-     * @param $val
-     * @return $this
-     */
-    public function setParamater($key,$val)
-    {
-        $this->params[$key] = $val;
-        return $this;
-    }
-
-    /**
-     * @param array $params
-     * @return $this
-     */
-    public function setParamaters(array $params)
-    {
-        foreach($params as $key => $val){
-            $this->setParamater($key,$val);
         }
         return $this;
     }
@@ -644,7 +653,7 @@ class Model_Query extends Model_QueryBase
     }
 
     /**
-     * @return Model[]
+     * @return array
      */
     public function getResults()
     {
