@@ -12,13 +12,21 @@ class CommandController{
     function __construct()
     {
         $command = $this->name();
-        if($command){
-            $command_action = (new CommandAction());
-            $command_action->setCallback(array($this,'execute'));
-            $this->setup($command_action);
-            Command::addAction($command,$command_action);
+        $keys = array();
+        if(is_array($command)){
+            $keys = $command;
         }else{
-            throw new \Exception(sprintf('Must be "%s" is name() method return command key.',get_class($this)));
+            $keys[] = $command;
+        }
+        if(count($keys) > 0){
+            foreach($keys as $key){
+                $command_action = (new CommandAction());
+                $command_action->setCallback(array($this,'execute'));
+                $this->setup($key,$command_action);
+                Command::addAction($command,$command_action);
+            }
+        }else{
+            throw new \Exception(sprintf('Must be "%s" is name() method return array or string command key.',get_class($this)));
         }
     }
 
@@ -38,20 +46,23 @@ class CommandController{
     /**
      * abstract action method(return command)
      *
-     * @return null
+     * @return array|string|null
      */
     public function name(){ return null; }
 
     /**
      * abstract action method(return command)
      *
+     * @param $key
+     * @param CommandAction $command
      * @return null
      */
-    public function setup(CommandAction $command){ return $command; }
+    public function setup($key,CommandAction $command){ return $command; }
 
     /**
      * abstract action method
      *
+     * @param $key
      * @param CommandAction $command
      * @return bool
      */
