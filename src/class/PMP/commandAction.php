@@ -145,6 +145,14 @@ class CommandAction extends Shell{
     }
 
     /**
+     * @return null
+     */
+    public function getCallCommand()
+    {
+        return $this->call_command;
+    }
+
+    /**
      * @param CommandShell $shell
      */
     public function addShell(CommandShell $shell)
