@@ -50,7 +50,7 @@ class ModelValue{
             $value = $this->column->getConvertValue($value);
             if($this->column->getType() == ModelColumn::$TYPE_BOOLEAN){
                 $value = intval($value);
-            }else if($this->column->getType() == ModelColumn::$TYPE_ARRAY){
+            /*}else if($this->column->getType() == ModelColumn::$TYPE_ARRAY){
                 $v = array();
                 if($value != ''){
                     $arr = explode(Model::$DB_ARRAY_SPACER,$value);
@@ -60,10 +60,11 @@ class ModelValue{
                         $v[] = $vv;
                     }
                 }
-                $value = $v;
-            }else if($this->column->getType() == ModelColumn::$TYPE_DATA){
+                $value = $v;*/
+            }else if(in_array($this->column->getType(),array(ModelColumn::$TYPE_DATA,ModelColumn::$TYPE_ARRAY))){
                 $value = null;
                 if($value){
+                    $value = base64_decode($value);
                     $value = unserialize($value);
                 }
             }
@@ -378,13 +379,14 @@ class Model{
             $vv = $this->get($k);
             if($vv instanceof Model){
                 $columns[$k] = $vv->getId();
-            }else if($v->getType() == ModelColumn::$TYPE_ARRAY){
+            /*}else if($v->getType() == ModelColumn::$TYPE_ARRAY){
                 if(is_array($vv) && (count($vv) > 0)){
-                    $columns[$k] = self::$DB_ARRAY_SPACER.implode(self::$DB_ARRAY_SPACER,$vv).self::$DB_ARRAY_SPACER;
+                    $columns[$k] = self::$DB_ARRAY_SPACER.implode(self::$DB_ARRAY_SPACER,$tmp).self::$DB_ARRAY_SPACER;
                 }else{
                     $columns[$k] = null;
-                }
-            }else if($v->getType() == ModelColumn::$TYPE_DATA){
+                }*/
+            }else if(in_array($v->getType(),array(ModelColumn::$TYPE_DATA,ModelColumn::$TYPE_ARRAY))){
+                $vv = base64_encode($vv);
                 $columns[$k] = serialize($vv);
             }else if(in_array($v->getType(),array(ModelColumn::$TYPE_DATE,ModelColumn::$TYPE_DATETIME))){
                 $vv = (string)$vv;
