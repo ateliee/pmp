@@ -379,7 +379,7 @@ class Model{
             if($vv instanceof Model){
                 $columns[$k] = $vv->getId();
             }else if($v->getType() == ModelColumn::$TYPE_ARRAY){
-                if(count($vv) > 0){
+                if(is_array($vv) && (count($vv) > 0)){
                     $columns[$k] = self::$DB_ARRAY_SPACER.implode(self::$DB_ARRAY_SPACER,$vv).self::$DB_ARRAY_SPACER;
                 }else{
                     $columns[$k] = null;
