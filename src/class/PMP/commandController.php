@@ -23,7 +23,7 @@ class CommandController{
                 $command_action = (new CommandAction());
                 $command_action->setCallback(array($this,'execute'));
                 $this->setup($key,$command_action);
-                Command::addAction($command,$command_action);
+                Command::addAction($key,$command_action);
             }
         }else{
             throw new \Exception(sprintf('Must be "%s" is name() method return array or string command key.',get_class($this)));
