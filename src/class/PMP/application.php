@@ -247,6 +247,9 @@ class Application{
                         while (($file = readdir($dh)) !== false) {
                             if ($file != "." && $file != ".." && preg_match("/\.php$/",$file)) {
                                 require_once($command_path.'/'.$file);
+
+                                $command_name = (pathinfo($file,PATHINFO_FILENAME));
+                                CommandController::add($command_name);
                             }
                         }
                         closedir($dh);
