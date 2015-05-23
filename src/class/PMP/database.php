@@ -1862,7 +1862,7 @@ class SQL_Query extends SQL_QueryBase
                 $sql .= "AS `".$this->table_alias."` ";
             }
             foreach($this->subquerys as $q){
-                $sql .= $q->getSubQuery();
+                $sql .= $q->getSubQuery().' ';
             }
             if($this->where != ""){
                 $sql .= " WHERE (".$this->where.")";
