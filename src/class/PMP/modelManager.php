@@ -644,17 +644,28 @@ class Model_Query extends Model_QueryBase
 
     /**
      * @param null $default
-     * @return null
+     * @return mixed|null
      */
     public function getResultOne($default=null)
     {
         if($results = $this->getArrayFirstResult()){
             $res = reset($results);
-            $model = new $this->model_name;
-            $model->setArray($res,true,true);
-            return $model;
+            return $res;
         }
         return $default;
+    }
+
+    /**
+     * @return Model|null
+     */
+    public function getSingleResult()
+    {
+        if($results = $this->getArrayFirstResult()){
+            $model = new $this->model_name;
+            $model->setArray($results,true,true);
+            return $model;
+        }
+        return null;
     }
 
     /**

@@ -10,6 +10,7 @@ class Application{
     static private $hostname;
     static private $base_url;
     static private $web_url;
+    static private $web_dir;
     static private $source_dir;
     static private $auth = array();
     static private $debug_mode = false;
@@ -60,6 +61,31 @@ class Application{
      */
     static function getRootDir($path=""){
         return self::$root_dir.$path;
+    }
+
+    /**
+     * @param mixed $web_dir
+     */
+    public static function setWebDir($web_dir)
+    {
+        self::$web_dir = $web_dir;
+    }
+
+    /**
+     * @return mixed
+     */
+    public static function getWebDir()
+    {
+        return self::$web_dir;
+    }
+
+    /**
+     * @param string $path
+     * @return string
+     */
+    public static function getWebPath($path="")
+    {
+        return self::getRootDir(self::$web_dir.$path);
     }
 
     /**
@@ -190,6 +216,48 @@ class Application{
     }
 
     /**
+     * @return array|null
+     */
+    static public function getBundles(){
+        $path = self::$source_dir;
+        if (is_dir($path)) {
+            $bundles = array();
+            if ($dh = opendir($path)) {
+                while (($file = readdir($dh)) !== false) {
+                    if ($file != "." && $file != ".." && is_dir($path.'/'.$file)) {
+                        $bundles[$file] = $path.'/'.$file;
+                    }
+                }
+                closedir($dh);
+            }
+            return $bundles;
+        }
+        return null;
+    }
+
+    /**
+     *
+     */
+    static public function commandAction(){
+        if($bundles = self::getBundles()){
+            foreach($bundles as $name => $path){
+                $command_path = $path.'/command';
+                if(is_dir($command_path)){
+                    if ($dh = opendir($command_path)) {
+                        while (($file = readdir($dh)) !== false) {
+                            if ($file != "." && $file != ".." && preg_match("/\.php$/",$file)) {
+                                require_once($command_path.'/'.$file);
+                            }
+                        }
+                        closedir($dh);
+                    }
+                }
+            }
+        }
+        Command::execute();
+    }
+
+    /**
      * request to load controller
      */
     static function action(){
@@ -287,6 +355,7 @@ class Application{
 
         Application::setRootDir($rootdir);
         Application::setBaseUrl($documentroot);
+        Application::setWebDir('/web');
         Application::setWebUrl($documentroot.'/web');
         Application::setHostname(isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '');
         Application::setHostname(isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '');
