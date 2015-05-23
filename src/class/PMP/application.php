@@ -39,6 +39,14 @@ class Application{
     }
 
     /**
+     * @return boolean
+     */
+    public static function getDebugMode()
+    {
+        return self::$debug_mode;
+    }
+
+    /**
      * @param $path
      * @return mixed
      */
