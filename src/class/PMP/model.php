@@ -62,13 +62,14 @@ class ModelValue{
                     }
                     $value = $v;*/
             }else if(in_array($this->column->getType(),array(ModelColumn::$TYPE_DATA,ModelColumn::$TYPE_ARRAY))){
-                $value = null;
                 if($value){
                     $value = @base64_decode($value);
                     $value = @unserialize($value);
                     if(($this->column->getType() == ModelColumn::$TYPE_ARRAY) && !is_array($value)){
                         $value = null;
                     }
+                }else{
+                    $value = null;
                 }
             }
         }
