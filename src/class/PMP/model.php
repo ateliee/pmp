@@ -50,22 +50,22 @@ class ModelValue{
             $value = $this->column->getConvertValue($value);
             if($this->column->getType() == ModelColumn::$TYPE_BOOLEAN){
                 $value = intval($value);
-            /*}else if($this->column->getType() == ModelColumn::$TYPE_ARRAY){
-                $v = array();
-                if($value != ''){
-                    $arr = explode(Model::$DB_ARRAY_SPACER,$value);
-                    array_shift($arr);
-                    array_pop($arr);
-                    foreach($arr as $vv){
-                        $v[] = $vv;
+                /*}else if($this->column->getType() == ModelColumn::$TYPE_ARRAY){
+                    $v = array();
+                    if($value != ''){
+                        $arr = explode(Model::$DB_ARRAY_SPACER,$value);
+                        array_shift($arr);
+                        array_pop($arr);
+                        foreach($arr as $vv){
+                            $v[] = $vv;
+                        }
                     }
-                }
-                $value = $v;*/
+                    $value = $v;*/
             }else if(in_array($this->column->getType(),array(ModelColumn::$TYPE_DATA,ModelColumn::$TYPE_ARRAY))){
                 $value = null;
                 if($value){
-                    $value = base64_decode($value);
-                    $value = unserialize($value);
+                    $value = @base64_decode($value);
+                    $value = @unserialize($value);
                 }
             }
         }
@@ -379,15 +379,15 @@ class Model{
             $vv = $this->get($k);
             if($vv instanceof Model){
                 $columns[$k] = $vv->getId();
-            /*}else if($v->getType() == ModelColumn::$TYPE_ARRAY){
-                if(is_array($vv) && (count($vv) > 0)){
-                    $columns[$k] = self::$DB_ARRAY_SPACER.implode(self::$DB_ARRAY_SPACER,$tmp).self::$DB_ARRAY_SPACER;
-                }else{
-                    $columns[$k] = null;
-                }*/
+                /*}else if($v->getType() == ModelColumn::$TYPE_ARRAY){
+                    if(is_array($vv) && (count($vv) > 0)){
+                        $columns[$k] = self::$DB_ARRAY_SPACER.implode(self::$DB_ARRAY_SPACER,$tmp).self::$DB_ARRAY_SPACER;
+                    }else{
+                        $columns[$k] = null;
+                    }*/
             }else if(in_array($v->getType(),array(ModelColumn::$TYPE_DATA,ModelColumn::$TYPE_ARRAY))){
-                $vv = base64_encode($vv);
-                $columns[$k] = serialize($vv);
+                $columns[$k] = @serialize($vv);
+                $columns[$k] = @base64_encode($columns[$k]);
             }else if(in_array($v->getType(),array(ModelColumn::$TYPE_DATE,ModelColumn::$TYPE_DATETIME))){
                 $vv = (string)$vv;
                 if(!$vv){
