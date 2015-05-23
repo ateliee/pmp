@@ -66,6 +66,9 @@ class ModelValue{
                 if($value){
                     $value = @base64_decode($value);
                     $value = @unserialize($value);
+                    if(($this->column->getType() == ModelColumn::$TYPE_ARRAY) && !is_array($value)){
+                        $value = null;
+                    }
                 }
             }
         }
